@@ -1,6 +1,8 @@
 const PDFDocument = require('pdfkit');
 
 function buildPDF(content, meta, res) {
+  // Use type-specific score label if provided, fallback to /10
+  const scoreLabel = meta.scoreLabel || '______ / 10';
   const doc = new PDFDocument({
     margin: 0,
     size: 'A4',
@@ -85,7 +87,7 @@ function buildPDF(content, meta, res) {
 
   doc.text('Date: ________________', LEFT + 280, y);
 
-  doc.text('Score: ______ / 10', LEFT + 420, y);
+  doc.text(`Score: ${scoreLabel}`, LEFT + 400, y);
 
   y += 22;
   drawLine(doc, LEFT, y, RIGHT, '#e5e7eb');
