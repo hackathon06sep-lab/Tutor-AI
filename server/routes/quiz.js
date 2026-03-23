@@ -16,23 +16,27 @@ router.post('/generate', authMiddleware, async (req, res) => {
   try {
     const ChatHistory = require('../models/ChatHistory');
     let chatContext = '';
+    let latestUserMessage = '';
 
     // Retrieve chat history if sessionId provided
     if (sessionId) {
       try {
         const chat = await ChatHistory.findOne({ _id: sessionId, userId: req.user.id });
         if (chat && chat.messages.length > 0) {
+          const lastUser = [...chat.messages].reverse().find(m => m.role === 'user');
+          latestUserMessage = (lastUser?.content || '').trim();
           const relevantMessages = chat.messages.slice(-6).map(m => `${m.role}: ${m.content}`).join('\n');
-          chatContext = `\n\nUserChat History Context:\n${relevantMessages}`;
+          chatContext = `\n\nUser Chat History Context (authoritative for quiz generation):\n${relevantMessages}`;
         }
       } catch (e) {
         console.warn('Could not load chat context:', e.message);
       }
     }
 
-    const ragContext = await retrieve(topic);
+    const retrievalQuery = latestUserMessage || topic;
+    const ragContext = await retrieve(retrievalQuery);
 
-    const prompt = `You are a quiz generator. Generate exactly 5 multiple-choice questions about "${topic}".
+    const prompt = `You are a quiz generator. Generate exactly 5 multiple-choice questions.
 ${ragContext ? `Use this retrieved context as reference:\n${ragContext}\n` : ''}${chatContext}
 Return ONLY a valid JSON array. No markdown, no extra text, no backticks.
 Format:
@@ -48,7 +52,8 @@ Rules:
 - Exactly 4 options per question labeled A), B), C), D)
 - The answer must be the full option text
 - Vary difficulty: 2 easy, 2 medium, 1 hard
-- If chat context is provided, base questions on that discussion`;
+- If User Chat History Context is provided, base questions primarily on that discussion.
+- If chat context conflicts with selected topic "${topic}", follow the chat context.`;
 
     const completion = await groq.chat.completions.create({
       model: 'llama-3.1-8b-instant',

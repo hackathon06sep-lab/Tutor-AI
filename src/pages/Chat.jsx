@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
@@ -7,6 +7,35 @@ import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
 
 const TOPICS = ['Mathematics', 'Science', 'History', 'English', 'Coding', 'General'];
+const INITIAL_ASSISTANT_MESSAGE = "Hello! I'm ready to help you learn. What topic would you like to explore today?";
+const CHAT_MESSAGES_KEY = 'tutor_chat_messages';
+const CHAT_SESSION_KEY = 'tutor_chat_session';
+const CHAT_TOPIC_KEY = 'tutor_chat_topic';
+
+function getSavedMessages() {
+  try {
+    const saved = localStorage.getItem(CHAT_MESSAGES_KEY);
+    const parsed = saved ? JSON.parse(saved) : [];
+    return Array.isArray(parsed) && parsed.length > 0
+      ? parsed
+      : [{ role: 'assistant', content: INITIAL_ASSISTANT_MESSAGE, timestamp: new Date() }];
+  } catch {
+    return [{ role: 'assistant', content: INITIAL_ASSISTANT_MESSAGE, timestamp: new Date() }];
+  }
+}
+
+function extractSubtopic(text) {
+  if (!text || typeof text !== 'string') return '';
+
+  const followUpMatch = text.match(/follow-?up\s*:\s*(?:what|how|why|when|where|which)?\s*(?:would|does|do|can|could|is|are)?\s*(?:happen|affect|change|impact|influence)?\s*(?:if)?\s*(?:the)?\s*([A-Za-z][A-Za-z\s-]{2,40})\?/i);
+  if (followUpMatch?.[1]) return followUpMatch[1].trim();
+
+  const labelMatch = text.match(/(?:topic|subtopic|focus)\s*:\s*([A-Za-z][A-Za-z\s-]{2,40})/i);
+  if (labelMatch?.[1]) return labelMatch[1].trim();
+
+  const aboutMatch = text.match(/\b(?:about|on|the role of|the concept of)\s+([A-Za-z][A-Za-z\s-]{2,40})/i);
+  return aboutMatch?.[1]?.trim() || '';
+}
 
 function TypingIndicator() {
   return (
@@ -78,25 +107,84 @@ function Message({ role, content, timestamp }) {
 export default function Chat() {
   const { token } = useAuth();
   const navigate = useNavigate();
-  const [messages,  setMessages]  = useState([{
-    role: 'assistant', content: "Hello! I'm ready to help you learn. What topic would you like to explore today?", timestamp: new Date()
-  }]);
+  const location = useLocation();
+  const [messages,  setMessages]  = useState(getSavedMessages);
   const [input,     setInput]     = useState('');
   const [loading,   setLoading]   = useState(false);
-  const [topic,     setTopic]     = useState('Mathematics');
-  const [sessionId, setSessionId] = useState(null);
+  const [topic,     setTopic]     = useState(() => localStorage.getItem(CHAT_TOPIC_KEY) || 'Mathematics');
+  const [lastSubtopic, setLastSubtopic] = useState('');
+  const [sessionId, setSessionId] = useState(() => localStorage.getItem(CHAT_SESSION_KEY) || null);
   const bottomRef = useRef(null);
   const textareaRef = useRef(null);
+  const quizTopic = 'Current Chat';
 
   const generateQuizFromChat = () => {
     if (sessionId) {
-      navigate(`/quiz?topic=${encodeURIComponent(topic)}&sessionId=${sessionId}`);
+      navigate(`/quiz?topic=${encodeURIComponent(quizTopic)}&sessionId=${sessionId}`);
     }
   };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
+
+  useEffect(() => {
+    localStorage.setItem(CHAT_MESSAGES_KEY, JSON.stringify(messages));
+  }, [messages]);
+
+  useEffect(() => {
+    if (sessionId) localStorage.setItem(CHAT_SESSION_KEY, sessionId);
+    else localStorage.removeItem(CHAT_SESSION_KEY);
+  }, [sessionId]);
+
+  useEffect(() => {
+    localStorage.setItem(CHAT_TOPIC_KEY, topic);
+  }, [topic]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const params = new URLSearchParams(location.search);
+    const topicFromQuery = params.get('topic');
+    const sessionFromQuery = params.get('sessionId');
+
+    if (topicFromQuery) {
+      setTopic(topicFromQuery);
+      setLastSubtopic('');
+    }
+
+    if (!sessionFromQuery) return;
+
+    setLoading(true);
+    fetch(`/api/chat/history/${sessionFromQuery}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Failed to load chat session');
+        return res.json();
+      })
+      .then((chat) => {
+        setSessionId(chat._id || sessionFromQuery);
+        setTopic(chat.topic || topicFromQuery || 'General');
+        if (Array.isArray(chat.messages) && chat.messages.length > 0) {
+          const lastAssistant = [...chat.messages].reverse().find(m => m.role === 'assistant');
+          setLastSubtopic(extractSubtopic(lastAssistant?.content || ''));
+          setMessages(chat.messages.map(m => ({
+            role: m.role,
+            content: m.content,
+            timestamp: m.timestamp || new Date(),
+          })));
+        } else {
+          setLastSubtopic('');
+          setMessages([{ role: 'assistant', content: INITIAL_ASSISTANT_MESSAGE, timestamp: new Date() }]);
+        }
+      })
+      .catch(() => {
+        setSessionId(null);
+        setLastSubtopic('');
+      })
+      .finally(() => setLoading(false));
+  }, [location.search, token]);
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
@@ -113,6 +201,7 @@ export default function Chat() {
       });
       const data = await res.json();
       if (data.sessionId) setSessionId(data.sessionId);
+      setLastSubtopic(extractSubtopic(data.response));
       setMessages(prev => [...prev, { role: 'assistant', content: data.response, timestamp: new Date() }]);
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.', timestamp: new Date() }]);
@@ -137,7 +226,14 @@ export default function Chat() {
           <div className="flex items-center gap-2">
             <select
               value={topic}
-              onChange={e => { setTopic(e.target.value); setMessages([]); setSessionId(null); }}
+              onChange={e => {
+                setTopic(e.target.value);
+                setLastSubtopic('');
+                setMessages([{ role: 'assistant', content: INITIAL_ASSISTANT_MESSAGE, timestamp: new Date() }]);
+                setSessionId(null);
+                localStorage.removeItem(CHAT_MESSAGES_KEY);
+                localStorage.removeItem(CHAT_SESSION_KEY);
+              }}
               className="px-4 py-2 text-sm font-medium tracking-widest uppercase text-on-surface bg-surface-container-high border border-outline-variant/30 rounded-lg hover:border-primary/40 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer transition-all appearance-none pr-8"
               style={{
                 backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='rgb(189, 157, 255)' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
@@ -156,12 +252,23 @@ export default function Chat() {
               disabled={!sessionId}
               className="px-4 py-1.5 text-xs font-semibold text-on-primary bg-gradient-to-r from-[#bd9dff] to-[#8a4cfc] rounded-lg hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Quiz on {topic}
+              Quiz on Current Chat
             </button>
-            <button className="px-4 py-1.5 text-xs font-semibold text-secondary border border-outline-variant/30 rounded-lg hover:bg-surface-container-high transition-colors">
+            <button
+              disabled
+              title="Focus Mode coming soon"
+              aria-label="Focus Mode (coming soon)"
+              className="px-4 py-1.5 text-xs font-semibold text-on-surface-variant/60 border border-outline-variant/30 rounded-lg cursor-not-allowed opacity-50"
+            >
               Focus Mode
             </button>
-            <button onClick={() => { setMessages([]); setSessionId(null); }}
+            <button onClick={() => {
+              setMessages([{ role: 'assistant', content: INITIAL_ASSISTANT_MESSAGE, timestamp: new Date() }]);
+              setSessionId(null);
+              setLastSubtopic('');
+              localStorage.removeItem(CHAT_MESSAGES_KEY);
+              localStorage.removeItem(CHAT_SESSION_KEY);
+            }}
                     className="material-symbols-outlined text-on-surface-variant hover:text-primary transition-colors">
               add_comment
             </button>
@@ -195,9 +302,18 @@ export default function Chat() {
                   Enter to send · Shift+Enter for new line
                 </span>
                 <div className="flex gap-2">
-                  <button className="p-2 hover:bg-surface-bright rounded-lg transition-colors text-on-surface-variant">
+                  <button
+                    type="button"
+                    disabled
+                    title="Document attach coming soon"
+                    aria-label="Attach document (coming soon)"
+                    className="p-2 rounded-lg text-on-surface-variant/60 cursor-not-allowed"
+                  >
                     <span className="material-symbols-outlined">attach_file</span>
                   </button>
+                  <span className="self-center text-[10px] uppercase tracking-widest text-on-surface-variant/60">
+                    Coming soon
+                  </span>
                   <button
                     onClick={sendMessage}
                     disabled={!input.trim() || loading}

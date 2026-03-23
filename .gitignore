@@ -26,3 +26,5 @@ server/.env
 *.njsproj
 *.sln
 *.sw?
+
+repomix-output.xml

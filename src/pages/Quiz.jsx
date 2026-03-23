@@ -18,7 +18,7 @@ const getFeedback = (score, total) => {
 };
 
 /* ── Topic Input Screen ── */
-function TopicInput({ onGenerate, loading, error }) {
+function TopicInput({ onGenerate, loading, error, validationError, setValidationError }) {
   const [topic, setTopic] = useState('');
 
   return (
@@ -42,16 +42,21 @@ function TopicInput({ onGenerate, loading, error }) {
           </p>
         </div>
 
-        {error && (
-          <p className="text-error text-sm bg-error-container/20 border border-error/30 rounded-xl px-4 py-3">{error}</p>
+        {(error || validationError) && (
+          <p className="text-error text-sm bg-error/5 border border-error/20 rounded-xl px-4 py-3">
+            {validationError || error}
+          </p>
         )}
 
         <div className="space-y-6">
           <div className="relative group">
             <input
               value={topic}
-              onChange={e => setTopic(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && topic.trim() && onGenerate(topic)}
+              onChange={e => {
+                setTopic(e.target.value);
+                setValidationError('');
+              }}
+              onKeyDown={e => e.key === 'Enter' && onGenerate(topic)}
               placeholder="e.g. Photosynthesis, World War II, Algebra..."
               className="w-full border-none rounded-xl py-6 px-8 text-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-primary/40 focus:bg-surface-container-highest transition-all duration-500 shadow-2xl outline-none"
               style={{ background: 'rgba(30,30,45,0.4)', backdropFilter: 'blur(20px)' }}
@@ -61,8 +66,8 @@ function TopicInput({ onGenerate, loading, error }) {
 
           <div className="flex justify-center pt-4">
             <button
-              onClick={() => topic.trim() && onGenerate(topic)}
-              disabled={!topic.trim() || loading}
+              onClick={() => onGenerate(topic)}
+              disabled={loading}
               className="font-bold py-5 px-12 rounded-xl text-lg flex items-center gap-3 hover:translate-y-[-4px] hover:shadow-[0px_20px_40px_rgba(189,157,255,0.2)] transition-all duration-500 active:scale-95 group disabled:opacity-40 text-[#000000]"
               style={{ background: 'linear-gradient(135deg, #bd9dff 0%, #8a4cfc 100%)' }}
             >
@@ -353,6 +358,7 @@ export default function Quiz() {
   const [answers,   setAnswers]   = useState([]);
   const [loading,   setLoading]   = useState(initialTopic ? true : false);
   const [error,     setError]     = useState('');
+  const [validationError, setValidationError] = useState('');
 
   useEffect(() => {
     if (initialTopic && phase === 'quiz-loading') {
@@ -361,14 +367,27 @@ export default function Quiz() {
   }, []);
 
   const generateQuiz = async (topicVal, sid = '') => {
+    const trimmedTopic = typeof topicVal === 'string' ? topicVal.trim() : '';
+
+    if (!trimmedTopic) {
+      setValidationError('Please enter a topic first - try "Photosynthesis" or "World War II".');
+      return;
+    }
+
+    if (trimmedTopic.length < 3) {
+      setValidationError('Topic is too short - please be a bit more specific.');
+      return;
+    }
+
+    setValidationError('');
     setLoading(true);
     setError('');
-    setTopic(topicVal);
+    setTopic(trimmedTopic);
     try {
       const res  = await fetch('/api/quiz/generate', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body:    JSON.stringify({ topic: topicVal, sessionId: sid }),
+        body:    JSON.stringify({ topic: trimmedTopic, sessionId: sid }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to generate quiz');
@@ -411,7 +430,25 @@ export default function Quiz() {
   return (
     <div className="bg-surface text-on-surface min-h-screen font-['Plus_Jakarta_Sans']">
       <Sidebar />
-      {phase === 'input' && <TopicInput onGenerate={generateQuiz} loading={loading} error={error} />}
+      {phase === 'quiz-loading' && (
+        <main className="ml-[240px] min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin material-symbols-outlined text-primary text-5xl">progress_activity</div>
+            <p className="text-on-surface-variant mt-4">
+              Generating quiz on <span className="text-primary">{topic || initialTopic}</span>...
+            </p>
+          </div>
+        </main>
+      )}
+      {phase === 'input' && (
+        <TopicInput
+          onGenerate={generateQuiz}
+          loading={loading}
+          error={error}
+          validationError={validationError}
+          setValidationError={setValidationError}
+        />
+      )}
       {phase === 'quiz'  && questions[current] && (
         <ActiveQuestion
           key={current}

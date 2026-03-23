@@ -21,7 +21,8 @@ export function AuthProvider({ children }) {
   };
 
   const logout = () => {
-    localStorage.clear();
+    localStorage.removeItem('ai_tutor_token');
+    localStorage.removeItem('ai_tutor_user');
     setToken(null);
     setUser(null);
   };

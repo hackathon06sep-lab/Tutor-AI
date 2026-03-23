@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Float, MeshDistortMaterial } from '@react-three/drei';
 import * as THREE from 'three';
@@ -6,6 +6,7 @@ import * as THREE from 'three';
 export default function BrainMesh() {
   const meshRef = useRef(null);
   const wireRef = useRef(null);
+  const edgesGeo = useMemo(() => new THREE.IcosahedronGeometry(1.73, 2), []);
 
   useFrame((_, delta) => {
     if (meshRef.current) {
@@ -38,7 +39,7 @@ export default function BrainMesh() {
       </mesh>
 
       <lineSegments ref={wireRef}>
-        <edgesGeometry args={[new THREE.IcosahedronGeometry(1.73, 2)]} />
+        <edgesGeometry args={[edgesGeo]} />
         <lineBasicMaterial color="#ff97b2" transparent opacity={0.4} />
       </lineSegments>
     </Float>

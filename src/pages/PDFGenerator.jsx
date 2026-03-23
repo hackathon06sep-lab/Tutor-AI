@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
 
@@ -15,11 +15,18 @@ const ASSIGNMENT_TYPES = [
   { label: 'Comprehension Test', icon: 'quiz'     },
 ];
 
-const RECENT_MOCK = [
-  { title: 'Photosynthesis - Worksheet',   time: '2h ago'    },
-  { title: 'French Revolution - Essay',    time: 'Yesterday' },
-  { title: 'Algebra Basics - Problem Set', time: '3d ago'    },
-];
+function formatRelativeTime(dateInput) {
+  const date = new Date(dateInput);
+  const diffMs = Date.now() - date.getTime();
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (diffMs < hour) return `${Math.max(1, Math.floor(diffMs / minute))}m ago`;
+  if (diffMs < day) return `${Math.floor(diffMs / hour)}h ago`;
+  if (diffMs < 2 * day) return 'Yesterday';
+  return `${Math.floor(diffMs / day)}d ago`;
+}
 
 export default function PDFGenerator() {
   const { token } = useAuth();
@@ -29,6 +36,25 @@ export default function PDFGenerator() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error,   setError]   = useState('');
+  const [recentAssignments, setRecentAssignments] = useState([]);
+
+  useEffect(() => {
+    if (!token) return;
+
+    fetch('/api/pdf/history', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(async (res) => {
+        if (!res.ok) throw new Error('Failed to load assignment history');
+        return res.json();
+      })
+      .then((data) => {
+        setRecentAssignments(Array.isArray(data) ? data.slice(0, 3) : []);
+      })
+      .catch(() => {
+        setRecentAssignments([]);
+      });
+  }, [token, success]);
 
   const generate = async (e) => {
     e.preventDefault();
@@ -185,17 +211,22 @@ export default function PDFGenerator() {
               Recent Assignments
             </h3>
             <div className="space-y-2">
-              {RECENT_MOCK.map(({ title, time }) => (
-                <div key={title}
-                     className="flex items-center gap-4 p-4 rounded-xl bg-surface-container-high/40 border border-outline-variant/10 hover:bg-surface-container-high transition-colors group cursor-pointer">
+              {recentAssignments.length === 0 && (
+                <div className="p-4 rounded-xl bg-surface-container-high/20 border border-outline-variant/10 text-center">
+                  <p className="text-sm text-on-surface-variant">No assignments yet. Generate your first PDF assignment.</p>
+                </div>
+              )}
+
+              {recentAssignments.map(({ _id, topic: assignmentTopic, assignmentType, generatedAt }) => (
+                <div key={_id}
+                     className="flex items-center gap-4 p-4 rounded-xl bg-surface-container-high/40 border border-outline-variant/10 hover:bg-surface-container-high transition-colors group">
                   <div className="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center">
                     <span className="material-symbols-outlined text-primary/70 group-hover:text-primary transition-colors">picture_as_pdf</span>
                   </div>
                   <div className="flex-1">
-                    <h4 className="text-sm font-semibold text-on-surface leading-tight">{title}</h4>
-                    <p className="text-xs text-on-surface-variant">{time}</p>
+                    <h4 className="text-sm font-semibold text-on-surface leading-tight">{assignmentTopic} - {assignmentType}</h4>
+                    <p className="text-xs text-on-surface-variant">{formatRelativeTime(generatedAt)}</p>
                   </div>
-                  <span className="material-symbols-outlined text-on-surface-variant group-hover:text-primary transition-colors">download</span>
                 </div>
               ))}
             </div>

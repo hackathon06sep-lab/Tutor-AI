@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -7,16 +8,38 @@ const NAV_ITEMS = [
   { path: '/pdf',  icon: 'picture_as_pdf', label: 'PDF Generator' },
 ];
 
-const RECENT = [
-  { label: 'Mathematics basics', time: '2h ago' },
-  { label: 'French Revolution',  time: 'Yesterday' },
-  { label: 'Photosynthesis',     time: '3d ago' },
-];
+function formatRelativeTime(dateInput) {
+  const date = new Date(dateInput);
+  const diffMs = Date.now() - date.getTime();
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (diffMs < hour) return `${Math.max(1, Math.floor(diffMs / minute))}m ago`;
+  if (diffMs < day) return `${Math.floor(diffMs / hour)}h ago`;
+  if (diffMs < 2 * day) return 'Yesterday';
+  return `${Math.floor(diffMs / day)}d ago`;
+}
 
 export default function Sidebar() {
   const { pathname } = useLocation();
-  const { user, logout } = useAuth();
+  const { user, token, logout } = useAuth();
   const navigate = useNavigate();
+  const [recentChats, setRecentChats] = useState([]);
+
+  useEffect(() => {
+    if (!token) {
+      setRecentChats([]);
+      return;
+    }
+
+    fetch('/api/chat/history', {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then(r => (r.ok ? r.json() : []))
+      .then(data => setRecentChats(Array.isArray(data) ? data.slice(0, 3) : []))
+      .catch(() => setRecentChats([]));
+  }, [token]);
 
   const handleLogout = () => { logout(); navigate('/'); };
 
@@ -76,15 +99,23 @@ export default function Sidebar() {
             <span className="text-[10px] font-bold text-on-surface-variant/40 uppercase tracking-[0.15em]">Recent</span>
           </div>
           <div className="px-3 space-y-3">
-            {RECENT.map(({ label, time }) => (
-              <div key={label} className="group cursor-pointer">
+            {recentChats.map(({ topic, createdAt, _id }) => (
+              <button
+                key={_id}
+                type="button"
+                onClick={() => navigate(`/chat?topic=${encodeURIComponent(topic)}&sessionId=${_id}`)}
+                className="group cursor-pointer text-left w-full"
+              >
                 <div className="flex items-center gap-2 mb-0.5">
                   <div className="w-1.5 h-1.5 rounded-full bg-on-surface-variant/20" />
-                  <span className="text-xs text-on-surface/80 group-hover:text-on-surface truncate transition-colors">{label}</span>
+                  <span className="text-xs text-on-surface/80 group-hover:text-on-surface truncate transition-colors">{topic}</span>
                 </div>
-                <span className="text-[10px] text-on-surface-variant/40 pl-3.5">{time}</span>
-              </div>
+                <span className="text-[10px] text-on-surface-variant/40 pl-3.5">{formatRelativeTime(createdAt)}</span>
+              </button>
             ))}
+            {recentChats.length === 0 && (
+              <p className="text-[10px] text-on-surface-variant/40 pl-3.5">No recent chats yet</p>
+            )}
           </div>
         </div>
       </div>
