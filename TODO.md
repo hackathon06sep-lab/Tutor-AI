@@ -612,23 +612,23 @@ TUTOR-AI/
 
 ### 4.3 — Push everything to GitHub
 
-- [ ] Stage all new files:
+- [x] Stage all new files:
   ```bash
   git add .
   ```
-- [ ] Check what's being committed (make sure .env is NOT listed):
+- [x] Check what's being committed (make sure .env is NOT listed):
   ```bash
   git status
   ```
-- [ ] Commit with a clear message:
+- [x] Commit with a clear message:
   ```bash
   git commit -m "feat: add complete frontend and backend implementation"
   ```
-- [ ] Push to main:
+- [x] Push to main:
   ```bash
   git push origin main
   ```
-- [ ] Go to `https://github.com/piyushkumar0707/TUTOR-AI` and verify all files appear
+- [x] Go to `https://github.com/piyushkumar0707/TUTOR-AI` and verify all files appear
 
 ---
 
