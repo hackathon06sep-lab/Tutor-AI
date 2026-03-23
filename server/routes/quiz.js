@@ -107,38 +107,43 @@ router.post('/explain', authMiddleware, async (req, res) => {
 
   try {
     const ragContext = await retrieve(question);
-    const isCorrect = userAnswer === correctAnswer;
+    const isCorrect = userAnswer && userAnswer.trim() === correctAnswer.trim();
 
-    const prompt = `You are a tutoring assistant. Explain the following quiz question and its answer.
+    const prompt = `You are a tutoring assistant. Provide a structured explanation for this quiz answer.
 
+**CONTEXT:**
 Topic: ${topic}
 Question: ${question}
 Correct Answer: ${correctAnswer}
-${userAnswer ? `User's Answer: ${userAnswer}` : ''}
+${userAnswer ? `User's Answer: ${userAnswer}` : 'N/A'}
+Correctness: ${isCorrect ? 'CORRECT ✓' : 'INCORRECT ✗'}
 
-${isCorrect ? 'The user answered CORRECTLY.' : 'The user answered INCORRECTLY.'}
+**YOUR TASK:**
+Generate an explanation that confirms the correct answer and explains why.
+${!isCorrect ? `Note: The user chose "${userAnswer}" but the correct answer is "${correctAnswer}". Explain how to get from the wrong answer to the right one.` : `The user correctly chose "${userAnswer}".`}
 
-Provide an explanation in this EXACT format:
+**OUTPUT FORMAT (follow exactly):**
 
-**Direct Answer** (2-3 lines confirming the correct answer)
+**Direct Answer**
+${isCorrect ? `Your answer of "${userAnswer}" is correct! Here's why:` : `The correct answer is "${correctAnswer}". Here's the reasoning:`} (2-3 sentences)
 
 **Key Points**
-* Bullet 1
-* Bullet 2
-* Bullet 3
+* Point 1 about this concept
+* Point 2 about this concept  
+* Point 3 about this concept
 
-**Example** (one concrete example related to this concept)
+**Example**
+(One concrete worked example relevant to this problem. Show the math/logic clearly.)
 
-**Related Concept** (one sentence about a related idea to explore)
+**Related Concept**
+(One sentence about a related idea to explore next.)
 
-${ragContext ? `Reference context: ${ragContext}` : ''}
-
-Keep the explanation clear, concise, and educational. Focus on WHY the correct answer is right.`;
+${ragContext ? `\n\nReference context: ${ragContext}` : ''}`;
 
     const completion = await groq.chat.completions.create({
       model: 'llama-3.1-8b-instant',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.5,
+      temperature: 0.4,
       max_tokens: 500,
     });
 

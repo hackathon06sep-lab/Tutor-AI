@@ -104,20 +104,26 @@ function ActiveQuestion({ question, options, topic, current, total, onAnswer, to
   const [selected, setSelected] = useState(null);
   const [explanation, setExplanation] = useState(null);
   const [loadingExplanation, setLoadingExplanation] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
 
-  const handleSelect = async (opt) => {
+  const handleSelect = (opt) => {
     if (selected) return;
     setSelected(opt);
+    setShowExplanation(false);
+    setExplanation(null);
+  };
+
+  const fetchExplanation = async () => {
+    if (explanation) return; // Already loaded
     setLoadingExplanation(true);
 
-    // Fetch explanation
     try {
       const res = await fetch('/api/quiz/explain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({
           question: question.question,
-          userAnswer: opt,
+          userAnswer: selected,
           correctAnswer: question.answer,
           topic,
         }),
@@ -125,6 +131,7 @@ function ActiveQuestion({ question, options, topic, current, total, onAnswer, to
       const data = await res.json();
       if (res.ok) {
         setExplanation(data.explanation);
+        setShowExplanation(true);
       }
     } catch (err) {
       console.error('Error fetching explanation:', err);
@@ -201,7 +208,7 @@ function ActiveQuestion({ question, options, topic, current, total, onAnswer, to
         </div>
 
         {/* Explanation Card */}
-        {selected && (
+        {selected && showExplanation && (
           <div className="rounded-2xl p-8 mb-10 border border-outline-variant/10 bg-surface-container-high/50"
                style={{ background: 'rgba(30,30,45,0.6)', backdropFilter: 'blur(20px)' }}>
             {loadingExplanation ? (
@@ -231,7 +238,7 @@ function ActiveQuestion({ question, options, topic, current, total, onAnswer, to
 
         {/* Footer */}
         {selected && (
-          <footer className="flex items-center justify-between py-8">
+          <footer className="flex items-center justify-between py-8 gap-6">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selected === question.answer ? 'bg-[#4ade80]/10' : 'bg-error/10'}`}>
                 <span className={`material-symbols-outlined ${selected === question.answer ? 'text-[#4ade80]' : 'text-error'}`}>
@@ -247,14 +254,26 @@ function ActiveQuestion({ question, options, topic, current, total, onAnswer, to
                 )}
               </div>
             </div>
-            <button
-              onClick={() => onAnswer(selected === question.answer)}
-              className="group flex items-center gap-3 py-4 px-8 text-on-primary font-bold rounded-xl shadow-[0_10px_30px_rgba(189,157,255,0.2)] hover:shadow-[0_15px_40px_rgba(189,157,255,0.3)] transition-all active:scale-95"
-              style={{ background: 'linear-gradient(90deg, #bd9dff, #8a4cfc)' }}
-            >
-              <span>{current >= total ? 'See results' : 'Next question'}</span>
-              <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
-            </button>
+            
+            <div className="flex items-center gap-4">
+              <button
+                onClick={fetchExplanation}
+                disabled={loadingExplanation || showExplanation}
+                className="group flex items-center gap-2 py-3 px-6 text-sm font-semibold text-on-surface border border-outline-variant/40 rounded-lg hover:bg-surface-container-high hover:border-primary/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="material-symbols-outlined text-base">help</span>
+                {loadingExplanation ? 'Loading...' : showExplanation ? 'Explanation Shown' : 'Show Explanation'}
+              </button>
+              
+              <button
+                onClick={() => onAnswer(selected === question.answer)}
+                className="group flex items-center gap-3 py-3 px-8 text-on-primary font-bold rounded-lg shadow-[0_10px_30px_rgba(189,157,255,0.2)] hover:shadow-[0_15px_40px_rgba(189,157,255,0.3)] transition-all active:scale-95"
+                style={{ background: 'linear-gradient(90deg, #bd9dff, #8a4cfc)' }}
+              >
+                <span>{current >= total ? 'See Results' : 'Next Question'}</span>
+                <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+              </button>
+            </div>
           </footer>
         )}
       </section>
@@ -395,6 +414,7 @@ export default function Quiz() {
       {phase === 'input' && <TopicInput onGenerate={generateQuiz} loading={loading} error={error} />}
       {phase === 'quiz'  && questions[current] && (
         <ActiveQuestion
+          key={current}
           question={questions[current]}
           options={questions[current].options}
           topic={topic}

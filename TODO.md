@@ -46,7 +46,7 @@ Note: `src/main.jsx`, `src/App.jsx`, `src/index.css`, `src/context/AuthContext.j
   npm install react-router-dom framer-motion
   ```
 - [x] Verify these are in `package.json` dependencies after install
-- [ ] Optional 3D bonus — install separately only after core features work:
+- [x] Optional 3D bonus — install separately only after core features work:
   ```bash
   npm install three @react-three/fiber @react-three/drei
   ```

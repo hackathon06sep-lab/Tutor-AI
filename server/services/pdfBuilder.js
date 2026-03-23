@@ -1,131 +1,293 @@
 const PDFDocument = require('pdfkit');
 
 function buildPDF(content, meta, res) {
-  const doc = new PDFDocument({ margin: 60, size: 'A4' });
+  const doc = new PDFDocument({
+    margin: 0,
+    size: 'A4',
+    bufferPages: true,
+  });
 
   res.setHeader('Content-Type', 'application/pdf');
   res.setHeader(
     'Content-Disposition',
-    `attachment; filename="assignment-${meta.topic.replace(/\s+/g, '-')}.pdf"`
+    `attachment; filename="assignment-${meta.topic.replace(/\s+/g, '-').toLowerCase()}.pdf"`
   );
 
   doc.pipe(res);
 
-  doc.rect(0, 0, doc.page.width, 100).fill('#1a1a2e');
+  const W      = doc.page.width;   // 595
+  const H      = doc.page.height;  // 842
+  const LEFT   = 50;
+  const RIGHT  = W - 50;
+  const INNER  = RIGHT - LEFT;     // 495
 
-  doc.fillColor('#a78bfa').fontSize(20).font('Helvetica-Bold').text('AI TUTOR', 60, 30);
-  doc.fillColor('#ffffff').fontSize(11).font('Helvetica').text('AI-Powered Assignment', 60, 55);
-  doc.fillColor('#a78bfa').fontSize(9).text(`Generated: ${new Date().toLocaleDateString()}`, 60, 75);
+  // ─── HEADER BAND ──────────────────────────────────────────────
+  doc.rect(0, 0, W, 100).fill('#1a1a2e');
 
-  doc.moveDown(3);
+  // Accent stripe
+  doc.rect(0, 0, 6, 100).fill('#7c3aed');
 
-  doc.fillColor('#1a1a2e').roundedRect(60, doc.y, doc.page.width - 120, 60, 8).fill();
-
-  doc
-    .fillColor('#ffffff')
-    .fontSize(16)
-    .font('Helvetica-Bold')
-    .text(content.title || `${meta.topic} Assignment`, 80, doc.y - 48);
-
+  // Logo
   doc
     .fillColor('#a78bfa')
-    .fontSize(10)
-    .font('Helvetica')
-    .text(`${meta.gradeLevel} Level  - ${meta.type} - Topic: ${meta.topic}`, 80, doc.y - 25);
+    .fontSize(22)
+    .font('Helvetica-Bold')
+    .text('TutorAI', LEFT + 10, 22);
 
-  doc.moveDown(2);
+  // Tagline
+  doc
+    .fillColor('#c4b5fd')
+    .fontSize(9)
+    .font('Helvetica')
+    .text('AI-Powered Assignment', LEFT + 10, 50);
+
+  // Date — top right
+  doc
+    .fillColor('#6d6a8a')
+    .fontSize(8)
+    .text(`Generated: ${new Date().toLocaleDateString('en-GB')}`, 0, 22, {
+      align: 'right',
+      width: W - 20,
+    });
+
+  // ─── TITLE BAND ───────────────────────────────────────────────
+  doc.rect(0, 100, W, 72).fill('#f8f7ff');
+
+  // Thin top border on title band
+  doc.rect(0, 100, W, 3).fill('#7c3aed');
+
+  const titleText = content.title || `${meta.topic} Assignment`;
+  doc
+    .fillColor('#1a1a2e')
+    .fontSize(17)
+    .font('Helvetica-Bold')
+    .text(titleText, LEFT + 10, 112, { width: INNER - 10 });
+
+  doc
+    .fillColor('#6b7280')
+    .fontSize(8)
+    .font('Helvetica')
+    .text(
+      `${meta.gradeLevel}  •  ${meta.type}  •  Topic: ${meta.topic}`,
+      LEFT + 10,
+      138,
+      { width: INNER }
+    );
+
+  // ─── STUDENT INFO BAR ─────────────────────────────────────────
+  let y = 190;
+
+  doc
+    .fillColor('#374151')
+    .fontSize(9)
+    .font('Helvetica')
+    .text('Name: _________________________________', LEFT, y);
+
+  doc.text('Date: ________________', LEFT + 280, y);
+
+  doc.text('Score: ______ / 10', LEFT + 420, y);
+
+  y += 22;
+  drawLine(doc, LEFT, y, RIGHT, '#e5e7eb');
+  y += 18;
+
+  // ─── LEARNING OBJECTIVES ──────────────────────────────────────
+  y = sectionHeader(doc, 'Learning Objectives', LEFT, y);
+
+  const objText = content.objectives ||
+    'By the end of this assignment, students will understand the key concepts of the topic.';
+
+  const objHeight = doc.heightOfString(objText, { width: INNER, fontSize: 10 });
+
+  // Light tinted background behind objectives
+  doc.rect(LEFT, y - 4, INNER, objHeight + 16).fill('#f5f3ff');
+  doc.rect(LEFT, y - 4, 3, objHeight + 16).fill('#7c3aed');
 
   doc
     .fillColor('#374151')
     .fontSize(10)
     .font('Helvetica')
-    .text('Name: ___________________________   Date: _______________   Score: _______ / 10', 60);
+    .text(objText, LEFT + 12, y, {
+      width: INNER - 20,
+      lineGap: 3,
+    });
 
-  doc.moveDown(1);
-  drawLine(doc);
-  doc.moveDown(1);
+  y += objHeight + 22;
+  drawLine(doc, LEFT, y, RIGHT, '#e5e7eb');
+  y += 18;
 
-  sectionHeader(doc, 'Learning Objectives');
-  doc
-    .fillColor('#374151')
-    .fontSize(11)
-    .font('Helvetica')
-    .text(content.objectives || '', 60, doc.y, { width: doc.page.width - 120 });
-
-  doc.moveDown(1.5);
-  drawLine(doc);
-  doc.moveDown(1);
-
-  sectionHeader(doc, 'Questions');
+  // ─── QUESTIONS ────────────────────────────────────────────────
+  y = sectionHeader(doc, 'Questions', LEFT, y);
 
   const questions = content.questions || [];
-  questions.forEach((q, i) => {
-    doc.moveDown(0.5);
 
+  questions.forEach((q, i) => {
+    // Page break check — leave 80px buffer
+    if (y > H - 80) {
+      doc.addPage();
+      y = 50;
+    }
+
+    // Question number badge
+    doc.circle(LEFT + 8, y + 7, 8).fill('#7c3aed');
+    doc
+      .fillColor('#ffffff')
+      .fontSize(8)
+      .font('Helvetica-Bold')
+      .text(`${i + 1}`, LEFT + 4, y + 3);
+
+    // Question text
+    const qText = q.question || '';
     doc
       .fillColor('#1a1a2e')
-      .fontSize(11)
+      .fontSize(10)
       .font('Helvetica-Bold')
-      .text(`${i + 1}. ${q.question}`, 60, doc.y, { width: doc.page.width - 120 });
+      .text(qText, LEFT + 22, y, { width: INNER - 22 });
 
-    if (q.type === 'mcq' && q.options) {
-      doc.moveDown(0.3);
-      q.options.forEach((opt) => {
-        doc.fillColor('#374151').fontSize(10).font('Helvetica').text(`    ${opt}`, 70, doc.y, {
-          width: doc.page.width - 130,
-        });
-      });
-    } else {
-      doc.moveDown(0.5);
-      for (let l = 0; l < 3; l += 1) {
+    y += doc.heightOfString(qText, { width: INNER - 22 }) + 8;
+
+    if (q.type === 'mcq' && Array.isArray(q.options)) {
+      q.options.forEach((opt, oi) => {
+        if (y > H - 60) { doc.addPage(); y = 50; }
+
+        const optLetters = ['A', 'B', 'C', 'D'];
+        const letter = optLetters[oi] || oi;
+        const cleanOpt = opt.replace(/^[A-D]\)\s*/i, '');
+
+        // Option bubble
         doc
-          .moveTo(70, doc.y + 5)
-          .lineTo(doc.page.width - 60, doc.y + 5)
+          .rect(LEFT + 22, y - 1, 16, 14)
+          .roundedRect(LEFT + 22, y - 1, 16, 14, 3)
+          .fill('#ede9fe');
+
+        doc
+          .fillColor('#7c3aed')
+          .fontSize(8)
+          .font('Helvetica-Bold')
+          .text(`${letter}`, LEFT + 26, y + 2);
+
+        doc
+          .fillColor('#4b5563')
+          .fontSize(9)
+          .font('Helvetica')
+          .text(cleanOpt, LEFT + 44, y, { width: INNER - 44 });
+
+        y += 18;
+      });
+      y += 6;
+    } else {
+      // Short answer lines
+      y += 4;
+      for (let l = 0; l < 3; l++) {
+        doc
+          .moveTo(LEFT + 22, y + 6)
+          .lineTo(RIGHT, y + 6)
           .strokeColor('#d1d5db')
           .lineWidth(0.5)
           .stroke();
-        doc.moveDown(0.8);
+        y += 18;
       }
+      y += 6;
     }
 
-    doc.moveDown(0.5);
+    // Separator between questions (not after last)
+    if (i < questions.length - 1) {
+      doc
+        .moveTo(LEFT, y)
+        .lineTo(RIGHT, y)
+        .strokeColor('#f3f4f6')
+        .lineWidth(1)
+        .stroke();
+      y += 10;
+    }
   });
 
-  doc.moveDown(1);
-  drawLine(doc);
-  doc.moveDown(1);
+  // ─── ANSWER KEY ───────────────────────────────────────────────
+  if (y > H - 140) {
+    doc.addPage();
+    y = 50;
+  }
 
-  sectionHeader(doc, 'Answer Key (Teacher Use Only)');
+  y += 10;
+  drawLine(doc, LEFT, y, RIGHT, '#e5e7eb');
+  y += 18;
 
+  // Answer key header with tinted background
+  doc.rect(LEFT, y - 6, INNER, 24).fill('#fdf2f8');
+  doc.rect(LEFT, y - 6, 3, 24).fill('#db2777');
+
+  doc
+    .fillColor('#831843')
+    .fontSize(11)
+    .font('Helvetica-Bold')
+    .text('Answer Key', LEFT + 12, y);
+
+  doc
+    .fillColor('#9d174d')
+    .fontSize(8)
+    .font('Helvetica')
+    .text('For teacher use only', LEFT + 100, y + 2);
+
+  y += 24;
+
+  const keyText = content.answerKey || 'Answer key not provided.';
   doc
     .fillColor('#374151')
-    .fontSize(10)
+    .fontSize(9)
     .font('Helvetica')
-    .text(content.answerKey || '', 60, doc.y, { width: doc.page.width - 120 });
+    .text(keyText, LEFT, y, {
+      width: INNER,
+      lineGap: 3,
+    });
 
-  const pageBottom = doc.page.height - 40;
-  doc
-    .moveTo(60, pageBottom - 15)
-    .lineTo(doc.page.width - 60, pageBottom - 15)
-    .strokeColor('#e5e7eb')
-    .lineWidth(0.5)
-    .stroke();
+  // ─── FOOTER (on every page) ────────────────────────────────────
+  const pages = doc.bufferedPageRange();
+  for (let i = 0; i < pages.count; i++) {
+    doc.switchToPage(pages.start + i);
 
-  doc.fillColor('#9ca3af').fontSize(8).text('Generated by AI Tutor App', 60, pageBottom - 5);
+    // Footer band
+    doc.rect(0, H - 28, W, 28).fill('#1a1a2e');
+    doc.rect(0, H - 28, 6, 28).fill('#7c3aed');
+
+    doc
+      .fillColor('#6d6a8a')
+      .fontSize(7)
+      .font('Helvetica')
+      .text(
+        `TutorAI  •  AI-Powered Education Platform  •  ${meta.topic}`,
+        LEFT + 10,
+        H - 18
+      );
+
+    // Page number
+    doc
+      .fillColor('#6d6a8a')
+      .fontSize(7)
+      .text(`Page ${i + 1} of ${pages.count}`, 0, H - 18, {
+        align: 'right',
+        width: W - 20,
+      });
+  }
 
   doc.end();
 }
 
-function sectionHeader(doc, text) {
-  doc.fillColor('#7c3aed').fontSize(13).font('Helvetica-Bold').text(text, 60);
-  doc.moveDown(0.5);
+// ─── Helpers ────────────────────────────────────────────────────
+
+function sectionHeader(doc, text, x, y) {
+  doc
+    .fillColor('#7c3aed')
+    .fontSize(12)
+    .font('Helvetica-Bold')
+    .text(text, x, y);
+  return y + 20;
 }
 
-function drawLine(doc) {
+function drawLine(doc, x1, y, x2, color = '#e5e7eb') {
   doc
-    .moveTo(60, doc.y)
-    .lineTo(doc.page.width - 60, doc.y)
-    .strokeColor('#e5e7eb')
+    .moveTo(x1, y)
+    .lineTo(x2, y)
+    .strokeColor(color)
     .lineWidth(0.5)
     .stroke();
 }
