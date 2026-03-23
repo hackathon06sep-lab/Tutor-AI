@@ -22,7 +22,7 @@ Uses **Groq API** (llama-3 model) for fast responses and **MongoDB** to store ch
 ## Folder Structure
 
 ```
-/client/src
+/src
   /pages
     Chat.jsx              ← main chat page
   /components
@@ -176,7 +176,7 @@ module.exports = router;
 
 ## Step 4 — MessageBubble Component
 
-**File:** `client/src/components/MessageBubble.jsx`
+**File:** `src/components/MessageBubble.jsx`
 
 ```jsx
 import { motion } from 'framer-motion';
@@ -216,7 +216,7 @@ export default function MessageBubble({ role, content, timestamp }) {
 
 ## Step 5 — Typing Indicator
 
-**File:** `client/src/components/TypingIndicator.jsx`
+**File:** `src/components/TypingIndicator.jsx`
 
 ```jsx
 export default function TypingIndicator() {
@@ -238,7 +238,7 @@ export default function TypingIndicator() {
 
 ## Step 6 — Chat Page (Frontend)
 
-**File:** `client/src/pages/Chat.jsx`
+**File:** `src/pages/Chat.jsx`
 
 ```jsx
 import { useState, useRef, useEffect } from 'react';

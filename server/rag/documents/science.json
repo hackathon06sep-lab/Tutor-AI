@@ -1,0 +1,20 @@
+[
+  {
+    "topic": "Science",
+    "title": "Photosynthesis",
+    "tags": ["biology", "plants", "photosynthesis", "chlorophyll"],
+    "content": "Photosynthesis is the process by which green plants convert sunlight into food. The equation is: 6CO2 + 6H2O + light energy -> C6H12O6 + 6O2. It occurs in chloroplasts using chlorophyll. The light-dependent reaction produces ATP and NADPH. The Calvin cycle (light-independent) uses these to produce glucose."
+  },
+  {
+    "topic": "Science",
+    "title": "Newton's Laws of Motion",
+    "tags": ["physics", "newton", "force", "motion"],
+    "content": "Newton's First Law: An object stays at rest or in motion unless acted on by a force (inertia). Second Law: Force = Mass x Acceleration (F = ma). Third Law: For every action there is an equal and opposite reaction. These laws form the foundation of classical mechanics."
+  },
+  {
+    "topic": "Science",
+    "title": "Periodic Table and Atomic Structure",
+    "tags": ["chemistry", "atoms", "periodic table", "elements"],
+    "content": "Atoms consist of protons, neutrons (in the nucleus), and electrons (orbiting shells). Atomic number = number of protons. Elements are arranged in the periodic table by atomic number. Groups (columns) share chemical properties. Periods (rows) share the same number of electron shells."
+  }
+]

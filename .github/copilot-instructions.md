@@ -1,132 +1,286 @@
 ---
-description: "TutorAI — AI-powered tutoring platform built with React 18, Node.js/Express, Groq API (llama3), and MongoDB Atlas"
+description: "TutorAI — AI-powered tutoring platform. React 19 + React Router v7 + Vite 6 + TailwindCSS 3 frontend at repo root. Express + Mongoose + Groq SDK + pdfkit backend in server/ subfolder."
 applyTo: "**"
 ---
 
 # TutorAI — Copilot Workspace Instructions
 
-**Stack:** React 18 · Vite · TailwindCSS · Framer Motion · Express · Mongoose · Groq SDK · pdfkit  
-**Auth:** JWT (jsonwebtoken + bcryptjs) stored in localStorage via AuthContext  
-**AI:** Groq API — llama3-8b-8192 (chat/quiz) · llama3-70b-8192 (PDF long-form)  
-**RAG:** MongoDB $text search via `server/rag/retriever.js` — injected into every Groq call
+always follow these instructions when generating code for this repo. If you find any contradictions or missing information, ask for clarification before proceeding.
+and start your work with a message rules loaded.
+after completing a task verify it , and then move to the next one.
+
+## Actual Repo Structure (verified from GitHub)
+
+```
+TUTOR-AI/                          ← repo root
+├── src/                           ← React app lives HERE (no client/ subfolder)
+│   ├── main.jsx                   ← Vite entry
+│   ├── App.jsx                    ← Router + PrivateRoute + PublicRoute
+│   ├── index.css                  ← @tailwind + Google Fonts imports
+│   ├── context/
+│   │   └── AuthContext.jsx        ← React 19 use() based auth context
+│   ├── components/
+│   │   ├── Sidebar.jsx            ← active route via useLocation()
+│   │   └── three/                 ← bonus 3D components (optional)
+│   └── pages/
+│       ├── Onboarding.jsx         ← landing page
+│       ├── Signin.jsx             ← login form
+│       ├── Signup.jsx             ← register form
+│       ├── Chat.jsx               ← AI chat interface
+│       ├── Quiz.jsx               ← quiz generator
+│       └── PDFGenerator.jsx       ← PDF creator
+├── server/                        ← Express backend (MISSING — create this folder)
+│   ├── index.js
+│   ├── package.json               ← separate from root package.json
+│   ├── .env                       ← NEVER commit this
+│   ├── .env.example               ← commit this (no real values)
+│   ├── models/                    ← User, ChatHistory, Document, QuizResult, Assignment
+│   ├── routes/                    ← auth, chat, quiz, pdf
+│   ├── rag/                       ← retriever.js + seeder.js + documents/
+│   ├── services/                  ← groqClient.js + pdfBuilder.js
+│   └── middleware/                ← authMiddleware.js
+├── index.html                     ✓ exists
+├── package.json                   ✓ exists (frontend deps)
+├── vite.config.js                 ✓ exists (add /api proxy)
+├── tailwind.config.js             ✓ exists
+├── postcss.config.js              ✓ exists
+└── .github/
+    └── copilot-instructions.md    ✓ this file
+```
+
+---
+
+## Exact Package Versions (from actual package.json)
+
+### Frontend (root package.json — already installed)
+```json
+{
+  "react": "^19.0.0",
+  "react-dom": "^19.0.0",
+  "react-router-dom": "^7.1.1",
+  "vite": "^6.0.5",
+  "tailwindcss": "^3.4.17",
+  "@vitejs/plugin-react": "^4.3.4"
+}
+```
+
+### Still needs installing (run at repo root)
+```bash
+npm install framer-motion
+```
+
+### Backend (run inside server/ folder)
+```bash
+cd server
+npm init -y
+npm install express mongoose groq-sdk pdfkit bcryptjs jsonwebtoken dotenv cors
+npm install --save-dev nodemon
+```
 
 ---
 
 ## Critical Rules (Never Violate)
 
-- **Never** hardcode API keys, secrets, or URLs — always use `process.env.*`
-- **Never** call Groq API from the frontend — all AI calls go through Express routes
-- **Never** generate PDFs in-browser — use `pdfkit` server-side only
-- **Always** run `retrieve(query)` from `server/rag/retriever.js` before every Groq call
-- **Always** attach `Authorization: Bearer ${token}` header on protected fetch calls
-- **Always** protect backend routes with `authMiddleware` from `server/middleware/authMiddleware.js`
+- **Never** call Groq API from frontend — all AI calls go through Express routes in `server/`
+- **Never** generate PDFs in the browser — `pdfkit` server-side only
+- **Never** hardcode secrets — all keys/URIs live in `server/.env`
+- **Never** commit `server/.env` — verify `.gitignore` has it listed
+- **Always** call `retrieve(query)` from `server/rag/retriever.js` before every Groq call
+- **Always** attach `Authorization: Bearer ${token}` on every protected fetch
+- **Always** protect backend routes with `authMiddleware`
 - **Always** use TailwindCSS for styling — no inline styles, no CSS modules
-- **Always** use Framer Motion for animations — no raw CSS `@keyframes` for transitions
-
----
-
-## Project Structure
-
-```
-tutorai/
-├── client/                         # Vite + React 18
-│   ├── src/
-│   │   ├── App.jsx                 # BrowserRouter + PrivateRoute + PublicRoute
-│   │   ├── index.css               # @tailwind directives + Google Fonts imports
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx     # { user, token, login(), logout() }
-│   │   ├── components/
-│   │   │   ├── Sidebar.jsx         # Active route via useLocation(); links to /chat /quiz /pdf
-│   │   │   └── three/
-│   │   │       ├── Scene.jsx       # Canvas + lights + OrbitControls
-│   │   │       └── BrainMesh.jsx   # IcosahedronGeometry + Float + useFrame
-│   │   └── pages/
-│   │       ├── Onboarding.jsx      # Landing — SVG brain orb + feature cards
-│   │       ├── Signin.jsx          # POST /api/auth/login → login() → /chat
-│   │       ├── Signup.jsx          # POST /api/auth/register → login() → /chat
-│   │       ├── Chat.jsx            # 3-panel: Sidebar + chat + context panel
-│   │       ├── Quiz.jsx            # 3 phases: 'input' | 'quiz' | 'score'
-│   │       └── PDFGenerator.jsx    # Form → POST → blob download
-│   ├── tailwind.config.js          # Full Midnight Scholar color palette
-│   └── vite.config.js              # proxy: { '/api': 'http://localhost:5000' }
-│
-└── server/                         # Express REST API
-    ├── index.js                    # app.listen; mounts all routes
-    ├── models/
-    │   ├── User.js                 # name, email, password(hashed), createdAt
-    │   ├── ChatHistory.js          # userId, topic, messages[], createdAt
-    │   ├── Document.js             # topic, title, content, tags — text-indexed
-    │   ├── QuizResult.js           # userId, topic, score, total, questions[], takenAt
-    │   └── Assignment.js           # userId, topic, gradeLevel, type, content, generatedAt
-    ├── routes/
-    │   ├── auth.js                 # POST /register  POST /login
-    │   ├── chat.js                 # POST /  GET /history  GET /history/:id
-    │   ├── quiz.js                 # POST /generate  POST /save  GET /history
-    │   └── pdf.js                  # POST /generate  GET /history
-    ├── rag/
-    │   ├── retriever.js            # retrieve(query) → string (top 3 chunks)
-    │   ├── seeder.js               # node rag/seeder.js → seeds MongoDB
-    │   └── documents/              # math.json science.json history.json coding.json english.json
-    ├── services/
-    │   ├── groqClient.js           # new Groq({ apiKey: process.env.GROQ_API_KEY })
-    │   └── pdfBuilder.js           # buildPDF(content, meta, res) — streams to response
-    └── middleware/
-        └── authMiddleware.js       # jwt.verify → attaches req.user = { id }
-```
+- **Always** use Framer Motion for complex animations — no raw `@keyframes` for transitions
+- **React Router v7** — JSX-based API still works; see routing section below
 
 ---
 
 ## Environment Variables
 
-### `server/.env`
+### `server/.env` (local only — never push)
 ```env
 PORT=5000
 MONGO_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/ai_tutor
-JWT_SECRET=<random 32-byte hex string>
-GROQ_API_KEY=gsk_<your_groq_key>
+JWT_SECRET=<run: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))">
+GROQ_API_KEY=gsk_<your_key_from_console.groq.com>
 NODE_ENV=development
 ```
 
-### `client/.env`
+### `server/.env.example` (safe to push)
 ```env
-VITE_API_URL=http://localhost:5000
+PORT=5000
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/ai_tutor
+JWT_SECRET=your_jwt_secret_here
+GROQ_API_KEY=gsk_your_groq_key_here
+NODE_ENV=development
 ```
-
-> Generate JWT_SECRET: `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`  
-> Get Groq key: https://console.groq.com → API Keys  
-> Get Mongo URI: MongoDB Atlas → Connect → Drivers
 
 ---
 
-## Routing Rules
+## Vite Config — Required API Proxy
+
+Add to `vite.config.js` at repo root:
+
+```js
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
+  },
+})
+```
+
+Without this, every `fetch('/api/...')` call from the frontend fails with CORS errors.
+
+---
+
+## React 19 Patterns
+
+### use() for context (replaces useContext)
+```jsx
+// AuthContext.jsx — export the raw context
+export const AuthContext = createContext(null);
+
+// In any component — React 19 use() replaces useContext()
+import { use } from 'react';
+import { AuthContext } from '../context/AuthContext';
+
+function MyComponent() {
+  const { user, token } = use(AuthContext);
+}
+```
+
+### useActionState for form submissions (replaces useState + manual submit handler)
+```jsx
+import { useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
+
+// Action receives (prevState, formData) — return new state
+async function loginAction(prevState, formData) {
+  const email    = formData.get('email');
+  const password = formData.get('password');
+  const res  = await fetch('/api/auth/login', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ email, password }),
+  });
+  const data = await res.json();
+  if (!res.ok) return { error: data.error };
+  return { success: true, data };
+}
+
+function LoginForm() {
+  const [state, formAction, isPending] = useActionState(loginAction, null);
+
+  return (
+    <form action={formAction}>
+      <input name="email"    type="email"    required />
+      <input name="password" type="password" required />
+      {state?.error && <p className="text-error text-sm">{state.error}</p>}
+      <SubmitButton />
+    </form>
+  );
+}
+
+// useFormStatus MUST be in a child component — not in the form itself
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" disabled={pending}
+            className="w-full py-4 rounded-xl bg-gradient-to-r from-[#bd9dff] to-[#8a4cfc] text-[#000000] font-bold disabled:opacity-40">
+      {pending ? 'Signing in...' : 'Sign in'}
+    </button>
+  );
+}
+```
+
+### When to use which pattern
+| Scenario | Hook |
+|---|---|
+| Form submission (login, register, generate quiz, PDF) | `useActionState` |
+| UI state (messages, current question, selected answer) | `useState` |
+| Submit button loading state | `useFormStatus` in a child component |
+| Non-form async (e.g. sending a chat message on Enter key) | `useState` + async function |
+| Reading auth context in any component | `use(AuthContext)` |
+
+---
+
+## React Router v7 Patterns
+
+React Router v7 is installed as `react-router-dom` (same package, `^7.1.1`).
+The JSX-based `<BrowserRouter>` API still works — no migration needed.
 
 ```jsx
-// App.jsx pattern — always follow this
-<Route path="/"       element={<Onboarding />} />                              // open
-<Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />        // redirect to /chat if logged in
-<Route path="/signin" element={<PublicRoute><Signin /></PublicRoute>} />        // redirect to /chat if logged in
-<Route path="/chat"   element={<PrivateRoute><Chat /></PrivateRoute>} />        // redirect to /signin if not logged in
-<Route path="/quiz"   element={<PrivateRoute><Quiz /></PrivateRoute>} />
-<Route path="/pdf"    element={<PrivateRoute><PDFGenerator /></PrivateRoute>} />
+// App.jsx
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { use } from 'react';
+import { AuthContext } from './context/AuthContext';
+
+function PrivateRoute({ children }) {
+  const { token } = use(AuthContext);
+  return token ? children : <Navigate to="/signin" replace />;
+}
+
+function PublicRoute({ children }) {
+  const { token } = use(AuthContext);
+  return !token ? children : <Navigate to="/chat" replace />;
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/"       element={<Onboarding />} />
+          <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+          <Route path="/signin" element={<PublicRoute><Signin /></PublicRoute>} />
+          <Route path="/chat"   element={<PrivateRoute><Chat /></PrivateRoute>} />
+          <Route path="/quiz"   element={<PrivateRoute><Quiz /></PrivateRoute>} />
+          <Route path="/pdf"    element={<PrivateRoute><PDFGenerator /></PrivateRoute>} />
+          <Route path="*"       element={<Navigate to="/" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
+  );
+}
+
+// Navigation in components
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+
+// Sidebar — detect active route
+const { pathname } = useLocation();
+const isActive = (path) => pathname === path;
+
+// Programmatic navigation
+const navigate = useNavigate();
+navigate('/chat');
 ```
 
 ---
 
 ## Auth Pattern
 
-### Frontend — always use `useAuth()`
+### Frontend
 ```jsx
-import { useAuth } from '../context/AuthContext';
+import { use } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 export default function MyPage() {
-  const { user, token, logout } = useAuth();
+  const { user, token, logout } = use(AuthContext);
 
-  const fetchData = async () => {
-    const res = await fetch('/api/some-route', {
+  const fetchProtected = async () => {
+    const res = await fetch('/api/route', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,   // ← always include
+        'Authorization': `Bearer ${token}`,    // ← always include
       },
       body: JSON.stringify({ payload }),
     });
@@ -137,12 +291,12 @@ export default function MyPage() {
 }
 ```
 
-### Backend — always use `authMiddleware`
+### Backend — always use `authMiddleware` on protected routes
 ```js
-// Every protected route must have authMiddleware as second argument
+const authMiddleware = require('../middleware/authMiddleware');
+
 router.post('/', authMiddleware, async (req, res) => {
   const userId = req.user.id;   // ← decoded from JWT by middleware
-  // ...
 });
 ```
 
@@ -151,22 +305,20 @@ router.post('/', authMiddleware, async (req, res) => {
 ## Groq API Pattern
 
 ```js
-// server/services/groqClient.js — import this, never instantiate inline
-const groq = require('../services/groqClient');
-
-// Standard call — always inject RAG context first
+const groq     = require('../services/groqClient');
 const retrieve = require('../rag/retriever');
 
 async function callGroq(userQuery, topic) {
-  const ragContext = await retrieve(userQuery);    // ← never skip this
+  const ragContext = await retrieve(userQuery);    // ← NEVER skip
 
   const completion = await groq.chat.completions.create({
-    model: 'llama3-8b-8192',                      // fast; use 70b for PDF
+    model: 'llama-3.1-8b-instant',                 // chat/quiz; use 70b for PDF
     messages: [
       {
         role: 'system',
-        content: `You are an AI tutor for ${topic}.
-Context: ${ragContext || 'Answer from general knowledge.'}`,
+        content: `You are an expert AI tutor specialising in ${topic}.
+Use this context to answer accurately:
+${ragContext || 'No specific context found — use your general knowledge.'}`,
       },
       { role: 'user', content: userQuery },
     ],
@@ -178,227 +330,153 @@ Context: ${ragContext || 'Answer from general knowledge.'}`,
 }
 ```
 
-| Use case | Model |
+| Route | Model |
 |---|---|
-| AI Chat responses | `llama3-8b-8192` |
-| Quiz generation (JSON) | `llama3-8b-8192` |
-| PDF assignment content | `llama3-70b-8192` |
+| `routes/chat.js` | `llama-3.1-8b-instant` |
+| `routes/quiz.js` | `llama-3.1-8b-instant` |
+| `routes/pdf.js`  | `llama-3.3-70b-versatile` |
 
 ---
 
 ## RAG Pattern
 
 ```js
-// Always call before Groq — in chat.js, quiz.js, and pdf.js
 const retrieve = require('../rag/retriever');
+// Returns top 3 matching doc chunks as a formatted string, or '' if nothing found
 
 const ragContext = await retrieve(userQuery);
-// Returns: "[Mathematics — Algebra Basics]\ncontent...\n\n---\n\n[...]"
-// Returns: "" if no match — handle gracefully (fall back to general knowledge)
+// Inject into Groq system prompt — always handle the empty string case gracefully
 ```
 
-**To add knowledge:** Create JSON in `server/rag/documents/topic.json`:
-```json
-[
-  {
-    "topic": "Physics",
-    "title": "Thermodynamics",
-    "tags": ["heat", "entropy", "temperature"],
-    "content": "Full text content here..."
-  }
-]
+---
+
+## Quiz JSON Safety Pattern
+
+```js
+const raw     = completion.choices[0].message.content.trim();
+const cleaned = raw.replace(/```json\n?|```/g, '').trim();
+
+let questions;
+try {
+  questions = JSON.parse(cleaned);
+} catch (e) {
+  console.error('Groq returned invalid JSON:', raw);
+  return res.status(500).json({ error: 'AI returned invalid format. Try a different topic.' });
+}
+
+if (!Array.isArray(questions) || questions.length !== 5) {
+  return res.status(500).json({ error: 'Unexpected question count. Please retry.' });
+}
 ```
-Then re-run: `node server/rag/seeder.js`
+
+---
+
+## PDF Stream Pattern
+
+```js
+// Always stream PDF — never write to disk
+buildPDF(parsedContent, { topic, gradeLevel, type: assignmentType }, res);
+// buildPDF sets Content-Type: application/pdf and streams via doc.pipe(res)
+
+// Frontend blob download
+const res  = await fetch('/api/pdf/generate', { method: 'POST', headers, body });
+if (!res.ok) { const d = await res.json(); throw new Error(d.error); }
+const blob = await res.blob();
+const url  = URL.createObjectURL(blob);
+const a    = document.createElement('a');
+a.href = url; a.download = `assignment-${topic}.pdf`; a.click();
+URL.revokeObjectURL(url);
+```
 
 ---
 
 ## Mongoose Schema Pattern
 
 ```js
-// All models must include timestamps and userId where applicable
 const schema = new mongoose.Schema({
   userId:    { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-  topic:     { type: String, required: true },
-  // ... feature-specific fields
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
 
-// Always query by userId for user-scoped data
+// Always scope queries to the authenticated user
 const results = await Model.find({ userId: req.user.id }).sort({ createdAt: -1 });
-```
-
----
-
-## React Component Pattern
-
-```jsx
-// Functional components only — no class components
-import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';           // all animations via Framer Motion
-import { useAuth } from '../context/AuthContext';
-
-export default function MyComponent({ prop }) {
-  const { token } = useAuth();
-  const [data,    setData]    = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [error,   setError]   = useState('');
-
-  // Always track loading + error state for API calls
-  const fetchData = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res  = await fetch('/api/route', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error);
-      setData(json);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-surface-container-high rounded-2xl p-6"  // TailwindCSS only
-    >
-      {loading && <Spinner />}
-      {error   && <p className="text-error text-sm">{error}</p>}
-      {data    && <Content data={data} />}
-    </motion.div>
-  );
-}
 ```
 
 ---
 
 ## TailwindCSS Color Reference
 
-These custom colors are defined in `tailwind.config.js`:
-
 | Token | Hex | Use |
 |---|---|---|
-| `primary` | `#bd9dff` | Accent, active states, links |
-| `primary-dim` | `#8a4cfc` | Gradient end, hover states |
-| `secondary` | `#a88cfb` | Secondary text, icons |
+| `primary` | `#bd9dff` | Accent, active nav, links |
+| `primary-dim` | `#8a4cfc` | Gradient end, hover darken |
+| `secondary` | `#a88cfb` | Secondary text, muted icons |
 | `tertiary` | `#ff97b2` | Status dots, highlights |
 | `surface` | `#0d0d18` | Page background |
 | `surface-container-low` | `#12121e` | Sidebar background |
 | `surface-container-high` | `#1e1e2d` | Cards, chat bubbles |
 | `surface-container-highest` | `#242434` | Inputs, dropdowns |
-| `on-surface` | `#e9e6f7` | Primary text |
-| `on-surface-variant` | `#aba9b9` | Muted/secondary text |
+| `surface-bright` | `#2b2a3c` | Card hover state |
+| `on-surface` | `#e9e6f7` | Primary body text |
+| `on-surface-variant` | `#aba9b9` | Muted / label text |
 | `outline-variant` | `#474754` | Borders, dividers |
-| `error` | `#ff6e84` | Error messages |
+| `error` | `#ff6e84` | Error text |
 
-**Gradient shorthand** (used for buttons, logo bg):
+**Primary gradient + correct text color:**
 ```
-bg-gradient-to-r from-[#bd9dff] to-[#8a4cfc]
+bg-gradient-to-r from-[#bd9dff] to-[#8a4cfc] text-[#000000]
 ```
-
----
-
-## PDF Generation Pattern
-
-```js
-// server/services/pdfBuilder.js — always stream, never write to disk
-const buildPDF = require('../services/pdfBuilder');
-
-router.post('/generate', authMiddleware, async (req, res) => {
-  const content = await getAIContent(req.body);  // call Groq first
-
-  // buildPDF sets Content-Type and Content-Disposition headers, then streams
-  buildPDF(content, { topic, gradeLevel, type }, res);
-});
-
-// Frontend — receive as blob and trigger download
-const res  = await fetch('/api/pdf/generate', { method: 'POST', ... });
-const blob = await res.blob();
-const url  = URL.createObjectURL(blob);
-const a    = document.createElement('a');
-a.href     = url;
-a.download = 'assignment.pdf';
-a.click();
-URL.revokeObjectURL(url);
-```
-
----
-
-## Quiz Generation Pattern
-
-```js
-// Always request strict JSON — strip code fences before parsing
-const prompt = `Generate 5 MCQs about "${topic}". 
-Return ONLY a JSON array, no markdown, no backticks:
-[{"question":"...","options":["A) ...","B) ...","C) ...","D) ..."],"answer":"A) ..."}]`;
-
-const raw     = completion.choices[0].message.content.trim();
-const cleaned = raw.replace(/```json|```/g, '').trim();
-const questions = JSON.parse(cleaned);   // wrap in try/catch
-
-if (!Array.isArray(questions) || questions.length !== 5) {
-  throw new Error('Invalid question format');
-}
-```
+Use `text-[#000000]` not `text-white` — the light purple gradient has poor contrast with white.
 
 ---
 
 ## API Response Conventions
 
 ```js
-// Success
-res.status(200).json({ data: result });
-res.status(201).json({ message: 'Created', id: doc._id });
-
-// Error
-res.status(400).json({ error: 'Validation message' });
-res.status(401).json({ error: 'No token' });
-res.status(403).json({ error: 'Invalid token' });
-res.status(500).json({ error: 'Server error' });
+res.status(200).json({ data: result });           // success with data
+res.status(201).json({ message: 'Created', id }); // resource created
+res.status(400).json({ error: 'Bad request' });   // validation failure
+res.status(401).json({ error: 'No token' });      // missing auth
+res.status(403).json({ error: 'Invalid token' }); // bad/expired JWT
+res.status(500).json({ error: 'Server error' });  // unexpected failure
 ```
+
+Frontend always checks `data.error` key: `if (!res.ok) throw new Error(data.error)`
 
 ---
 
-## Common Tasks
+## Dev Commands
 
-### Add a new protected page
-1. Create `src/pages/NewPage.jsx`
-2. Add `<Route path="/new" element={<PrivateRoute><NewPage /></PrivateRoute>} />` in `App.jsx`
-3. Add nav link in `Sidebar.jsx` `NAV_ITEMS` array
-4. Use `useAuth()` for token in all API calls
+```bash
+# Frontend — run at repo root
+npm run dev                      # http://localhost:5173
 
-### Add a new API route
-1. Create handler in `server/routes/module.js`
-2. Mount in `server/index.js`: `app.use('/api/module', require('./routes/module'))`
-3. Protect with `authMiddleware`: `router.post('/', authMiddleware, handler)`
-4. Call `retrieve()` before Groq if user input is involved
+# Backend — run inside server/
+cd server && npm run dev         # http://localhost:5000 (nodemon)
 
-### Add RAG documents
-1. Add JSON file to `server/rag/documents/`
-2. Run `node server/rag/seeder.js`
-3. Verify in MongoDB Atlas → `ai_tutor` → `documents` collection
+# Seed RAG knowledge base — run once after server/ is set up
+node server/rag/seeder.js
+
+# Generate a secure JWT secret
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
 
 ---
 
 ## Module Plan Files
 
-Detailed specs for each feature — reference before building:
-
-| File | Covers |
+| File | What it covers |
 |---|---|
 | `01_onboarding_auth_plan.md` | User model, bcrypt, JWT, AuthContext, PrivateRoute |
-| `02_ai_chat_plan.md` | Chat UI, Groq integration, ChatHistory model, streaming |
-| `03_rag_engine_plan.md` | Document model, seeder, retriever.js, text index |
-| `04_quiz_module_plan.md` | Quiz generation prompt, QuizResult model, score screen |
+| `02_ai_chat_plan.md` | Chat UI, Groq, ChatHistory model, topic selector |
+| `03_rag_engine_plan.md` | Document model, seeder, retriever.js, 5 JSON files |
+| `04_quiz_module_plan.md` | Quiz prompt, JSON parsing, QuizResult model, score screen |
 | `05_pdf_generator_plan.md` | pdfBuilder.js, Groq content prompt, blob download |
-| `06_3d_bonus_plan.md` | Three.js, React Three Fiber, BrainMesh, performance |
+| `06_3d_bonus_plan.md` | Three.js, React Three Fiber, BrainMesh, lazy load |
+
+See `TODO.md` at repo root for the complete ordered build checklist.
 
 ---
 
-*Last updated: March 2026*
+*Last updated: March 2026 | Repo: github.com/piyushkumar0707/TUTOR-AI*

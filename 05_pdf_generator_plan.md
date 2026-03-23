@@ -22,7 +22,7 @@ and **pdfkit** (Node.js) for PDF creation. Assignment history stored in **MongoD
 ## Folder Structure
 
 ```
-/client/src
+/src
   /pages
     PDFGenerator.jsx      ← generator form + preview + download
 
@@ -338,7 +338,7 @@ app.use('/api/pdf', pdfRoute);
 
 ## Step 5 — PDF Generator Page (Frontend)
 
-**File:** `client/src/pages/PDFGenerator.jsx`
+**File:** `src/pages/PDFGenerator.jsx`
 
 ```jsx
 import { useState } from 'react';

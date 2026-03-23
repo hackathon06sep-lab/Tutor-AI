@@ -57,8 +57,8 @@ The UI was designed using **Google Stitch** and converted to React, featuring a 
 ### Frontend
 | Tool | Purpose |
 |---|---|
-| React 18 | Component framework |
-| React Router v6 | Client-side routing |
+| React 19 | Component framework |
+| React Router v7 | Client-side routing |
 | TailwindCSS | Utility-first styling |
 | Framer Motion | Page transitions and animations |
 | Three.js + React Three Fiber | 3D orb on landing page (bonus) |
@@ -87,28 +87,24 @@ The UI was designed using **Google Stitch** and converted to React, featuring a 
 
 ```
 tutorai/
-├── client/                          # React frontend
-│   ├── public/
-│   ├── src/
-│   │   ├── App.jsx                  # Router + PrivateRoute
-│   │   ├── index.css                # Global styles + fonts
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx      # Global auth state
-│   │   ├── components/
-│   │   │   ├── Sidebar.jsx          # Shared navigation
-│   │   │   └── three/               # 3D components (bonus)
-│   │   │       ├── Scene.jsx
-│   │   │       └── BrainMesh.jsx
-│   │   └── pages/
-│   │       ├── Onboarding.jsx       # Landing page
-│   │       ├── Signin.jsx           # Sign in
-│   │       ├── Signup.jsx           # Sign up
-│   │       ├── Chat.jsx             # AI Chat interface
-│   │       ├── Quiz.jsx             # Quiz module (3 states)
-│   │       └── PDFGenerator.jsx     # PDF creator
-│   ├── tailwind.config.js
-│   ├── vite.config.js
-│   └── package.json
+├── src/                             # React frontend (repo root)
+│   ├── App.jsx                      # Router + PrivateRoute
+│   ├── main.jsx                     # Vite entry point
+│   ├── index.css                    # Global styles + fonts
+│   ├── context/
+│   │   └── AuthContext.jsx          # Global auth state
+│   ├── components/
+│   │   ├── Sidebar.jsx              # Shared navigation
+│   │   └── three/                   # 3D components (bonus)
+│   │       ├── Scene.jsx
+│   │       └── BrainMesh.jsx
+│   └── pages/
+│       ├── Onboarding.jsx           # Landing page
+│       ├── Signin.jsx               # Sign in
+│       ├── Signup.jsx               # Sign up
+│       ├── Chat.jsx                 # AI Chat interface
+│       ├── Quiz.jsx                 # Quiz module (3 states)
+│       └── PDFGenerator.jsx         # PDF creator
 │
 ├── server/                          # Express backend
 │   ├── index.js                     # Entry point
@@ -180,7 +176,7 @@ npm install
 **3. Install frontend dependencies**
 
 ```bash
-cd ../client
+cd ..
 npm install
 ```
 
@@ -209,7 +205,7 @@ PORT=5000
 > - `GROQ_API_KEY` → [console.groq.com](https://console.groq.com) → API Keys → Create new key
 > - `JWT_SECRET` → any random long string (e.g. run `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`)
 
-Create a `.env` file inside the `client/` folder (for Vite proxy):
+Create a `.env` file at repo root (optional, for explicit frontend API URL):
 
 ```env
 VITE_API_URL=http://localhost:5000
@@ -256,13 +252,12 @@ Server runs at: `http://localhost:5000`
 **Start the frontend (in a new terminal):**
 
 ```bash
-cd client
 npm run dev
 ```
 
 Frontend runs at: `http://localhost:5173`
 
-**Vite proxy config** — add this to `client/vite.config.js` so API calls work:
+**Vite proxy config** — add this to `vite.config.js` so API calls work:
 
 ```js
 import { defineConfig } from 'vite';
@@ -510,9 +505,9 @@ Returns: Binary PDF file stream (`application/pdf`)
 
 ### Deploy Frontend to Vercel
 
-1. Push `client/` to GitHub
+1. Push repo root frontend to GitHub
 2. Go to [vercel.com](https://vercel.com) → New Project
-3. Connect repo, set root to `client/`
+3. Connect repo, set root to `/` (repo root)
 4. Add environment variable: `VITE_API_URL=https://your-render-url.onrender.com`
 5. Update `vite.config.js` proxy target to the Render URL for production
 

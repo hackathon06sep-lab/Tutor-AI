@@ -15,15 +15,14 @@ Uses **MongoDB** for user storage and **JWT** for session tokens.
 | Backend | Node.js + Express |
 | Database | MongoDB (via Mongoose) |
 | Auth | JWT (jsonwebtoken) + bcrypt |
-| Routing | React Router v6 |
+| Routing | React Router v7 |
 
 ---
 
 ## Folder Structure
 
 ```
-/client
-  /src
+/src
     /pages
       Onboarding.jsx       ← animated landing page
       Signin.jsx           ← sign-in form
@@ -146,7 +145,7 @@ module.exports = (req, res, next) => {
 
 ## Step 4 — Auth Context (Frontend)
 
-**File:** `client/src/context/AuthContext.jsx`
+**File:** `src/context/AuthContext.jsx`
 
 ```jsx
 import { createContext, useContext, useState, useEffect } from 'react';
@@ -190,7 +189,7 @@ export const useAuth = () => useContext(AuthContext);
 
 ## Step 5 — Protected Route
 
-**File:** `client/src/components/PrivateRoute.jsx`
+**File:** `src/components/PrivateRoute.jsx`
 
 ```jsx
 import { Navigate } from 'react-router-dom';
@@ -206,7 +205,7 @@ export default function PrivateRoute({ children }) {
 
 ## Step 6 — Onboarding Page (Animated Landing)
 
-**File:** `client/src/pages/Onboarding.jsx`
+**File:** `src/pages/Onboarding.jsx`
 
 ```jsx
 import { motion } from 'framer-motion';
@@ -270,7 +269,7 @@ export default function Onboarding() {
 
 ## Step 7 — Sign Up Page
 
-**File:** `client/src/pages/Signup.jsx`
+**File:** `src/pages/Signup.jsx`
 
 ```jsx
 import { useState } from 'react';
@@ -350,7 +349,7 @@ export default function Signup() {
 
 ## Step 8 — Sign In Page
 
-**File:** `client/src/pages/Signin.jsx`
+**File:** `src/pages/Signin.jsx`
 
 ```jsx
 import { useState } from 'react';
@@ -424,7 +423,7 @@ export default function Signin() {
 
 ## Step 9 — React Router Setup
 
-**File:** `client/src/App.jsx`
+**File:** `src/App.jsx`
 
 ```jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';

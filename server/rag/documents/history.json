@@ -1,0 +1,14 @@
+[
+  {
+    "topic": "History",
+    "title": "World War II Overview",
+    "tags": ["world war 2", "WWII", "1939", "1945", "allies"],
+    "content": "World War II (1939-1945) was a global conflict between the Allies (USA, UK, USSR, France) and the Axis powers (Germany, Italy, Japan). It began with Germany's invasion of Poland. Key events include the Holocaust, Battle of Britain, Pearl Harbor (1941), D-Day (1944), and atomic bombings of Hiroshima and Nagasaki (1945). It ended with Axis surrender."
+  },
+  {
+    "topic": "History",
+    "title": "The French Revolution",
+    "tags": ["french revolution", "1789", "france", "monarchy"],
+    "content": "The French Revolution (1789-1799) overthrew the French monarchy and established democratic ideals of liberty, equality, and fraternity. Key causes: financial crisis, Enlightenment ideas, social inequality. Events: storming of the Bastille, Declaration of the Rights of Man, Reign of Terror, rise of Napoleon Bonaparte."
+  }
+]

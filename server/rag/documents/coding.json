@@ -1,0 +1,14 @@
+[
+  {
+    "topic": "Coding",
+    "title": "JavaScript Fundamentals",
+    "tags": ["javascript", "programming", "variables", "functions"],
+    "content": "JavaScript is a dynamic scripting language for the web. Key concepts: variables (let, const, var), data types (string, number, boolean, array, object), functions (regular and arrow functions), promises and async/await for asynchronous code, DOM manipulation, and event listeners."
+  },
+  {
+    "topic": "Coding",
+    "title": "Data Structures Overview",
+    "tags": ["data structures", "arrays", "linked lists", "trees", "graphs"],
+    "content": "Common data structures: Arrays (ordered list, O(1) access), Linked Lists (dynamic size, O(n) access), Stacks (LIFO), Queues (FIFO), Hash Maps (key-value, O(1) average), Trees (hierarchical, BST for sorted data), Graphs (nodes + edges, used for networks). Choosing the right structure is key to efficient algorithms."
+  }
+]

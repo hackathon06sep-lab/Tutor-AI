@@ -21,7 +21,7 @@ This is the visual showpiece that impresses evaluators — a floating, glowing 3
 ## Folder Structure
 
 ```
-/client/src
+/src
   /components
     /three
       Scene.jsx           ← main 3D scene
@@ -55,7 +55,7 @@ Verify versions in `package.json`:
 This is the main 3D object — an icosahedron (brain-like polyhedron) with a wireframe overlay
 and slow rotation + floating animation.
 
-**File:** `client/src/components/three/BrainMesh.jsx`
+**File:** `src/components/three/BrainMesh.jsx`
 
 ```jsx
 import { useRef } from 'react';
@@ -120,7 +120,7 @@ export default function BrainMesh() {
 
 ## Step 3 — Particle Field (Stars Background)
 
-**File:** `client/src/components/three/ParticleField.jsx`
+**File:** `src/components/three/ParticleField.jsx`
 
 ```jsx
 import { Stars } from '@react-three/drei';
@@ -144,7 +144,7 @@ export default function ParticleField() {
 
 ## Step 4 — Full 3D Scene
 
-**File:** `client/src/components/three/Scene.jsx`
+**File:** `src/components/three/Scene.jsx`
 
 ```jsx
 import { Suspense } from 'react';
@@ -189,7 +189,7 @@ export default function Scene() {
 
 ## Step 5 — Integrate into Onboarding Page
 
-**File:** `client/src/pages/Onboarding.jsx` (updated with 3D)
+**File:** `src/pages/Onboarding.jsx` (updated with 3D)
 
 ```jsx
 import { Suspense, lazy } from 'react';
@@ -285,7 +285,7 @@ export default function Onboarding() {
 
 ### Reduce canvas quality on mobile
 
-**File:** `client/src/components/three/Scene.jsx` (add dpr setting)
+**File:** `src/components/three/Scene.jsx` (add dpr setting)
 
 ```jsx
 <Canvas
@@ -344,7 +344,7 @@ If you want a different 3D shape, swap `icosahedronGeometry`:
 
 Add animated SVG illustrations to Sign In / Sign Up pages:
 
-**File:** `client/src/assets/auth-illustration.svg` (place inline in JSX)
+**File:** `src/assets/auth-illustration.svg` (place inline in JSX)
 
 ```jsx
 // In Signup.jsx — add next to the form

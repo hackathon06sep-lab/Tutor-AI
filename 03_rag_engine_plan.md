@@ -174,7 +174,7 @@ module.exports = mongoose.model('Document', documentSchema);
 **File:** `server/rag/seeder.js`
 
 ```js
-require('dotenv').config({ path: '../.env' });
+require('dotenv').config({ path: require('path').resolve(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
 const Document = require('../models/Document');
 const fs       = require('fs');

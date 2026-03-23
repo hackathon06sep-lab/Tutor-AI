@@ -1,0 +1,14 @@
+[
+  {
+    "topic": "English",
+    "title": "Essay Writing Structure",
+    "tags": ["essay", "writing", "paragraph", "thesis"],
+    "content": "A strong essay has three parts: Introduction (hook, background, thesis statement), Body Paragraphs (topic sentence, evidence, analysis, transition), and Conclusion (restate thesis, summarize key points, closing thought). Each body paragraph should cover one main idea supported by evidence."
+  },
+  {
+    "topic": "English",
+    "title": "Grammar Essentials",
+    "tags": ["grammar", "nouns", "verbs", "tenses", "punctuation"],
+    "content": "Parts of speech: Noun (person, place, thing), Verb (action or state), Adjective (modifies noun), Adverb (modifies verb/adjective), Pronoun (replaces noun), Preposition (shows relationship). Tenses: Simple (I eat), Continuous (I am eating), Perfect (I have eaten). Punctuation: comma, semicolon, colon, apostrophe."
+  }
+]

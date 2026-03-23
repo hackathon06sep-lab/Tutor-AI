@@ -1,0 +1,20 @@
+[
+  {
+    "topic": "Mathematics",
+    "title": "Algebra Basics",
+    "tags": ["algebra", "equations", "variables"],
+    "content": "Algebra is a branch of mathematics dealing with symbols and rules for manipulating those symbols. Variables like x and y represent unknown values. Linear equations (ax + b = 0) have one solution. Quadratic equations (ax^2 + bx + c = 0) are solved using the quadratic formula: x = (-b +- sqrt(b^2-4ac)) / 2a."
+  },
+  {
+    "topic": "Mathematics",
+    "title": "Geometry Fundamentals",
+    "tags": ["geometry", "shapes", "area", "volume"],
+    "content": "Geometry studies shapes, sizes, and properties of figures. Key formulas: Area of circle = pi r^2. Area of triangle = (base x height) / 2. Pythagorean theorem: a^2 + b^2 = c^2 for right triangles. Volume of a sphere = (4/3)pi r^3. Volume of a cylinder = pi r^2 h."
+  },
+  {
+    "topic": "Mathematics",
+    "title": "Calculus Introduction",
+    "tags": ["calculus", "derivatives", "integrals", "limits"],
+    "content": "Calculus is the study of continuous change. Derivatives measure the rate of change: d/dx(x^n) = nx^(n-1). Integrals measure accumulated change. The Fundamental Theorem of Calculus links differentiation and integration. Limits describe the value a function approaches as input approaches a point."
+  }
+]

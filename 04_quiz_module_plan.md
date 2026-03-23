@@ -21,7 +21,7 @@ presents them one-by-one with animated feedback, and saves results to **MongoDB*
 ## Folder Structure
 
 ```
-/client/src
+/src
   /pages
     Quiz.jsx              ← main quiz page (topic input + questions + score)
   /components
@@ -175,7 +175,7 @@ app.use('/api/quiz', quizRoute);
 
 ## Step 4 — QuizCard Component
 
-**File:** `client/src/components/QuizCard.jsx`
+**File:** `src/components/QuizCard.jsx`
 
 ```jsx
 import { useState } from 'react';
@@ -269,7 +269,7 @@ export default function QuizCard({ question, options, answer, onNext, questionNu
 
 ## Step 5 — Score Screen Component
 
-**File:** `client/src/components/ScoreScreen.jsx`
+**File:** `src/components/ScoreScreen.jsx`
 
 ```jsx
 import { motion } from 'framer-motion';
@@ -345,7 +345,7 @@ export default function ScoreScreen({ score, total, topic, questions, onRetry, o
 
 ## Step 6 — Quiz Page (Main)
 
-**File:** `client/src/pages/Quiz.jsx`
+**File:** `src/pages/Quiz.jsx`
 
 ```jsx
 import { useState } from 'react';
