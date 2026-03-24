@@ -1,5 +1,6 @@
 const nodemailer = require('nodemailer');
 const dns = require('node:dns');
+const net = require('node:net');
 const logger = require('./logger');
 
 try {
@@ -20,7 +21,40 @@ function shouldFailOpen() {
   return String(process.env.SMTP_FAIL_OPEN || 'true').toLowerCase() === 'true';
 }
 
-function getTransporter() {
+async function resolveConnectHost(smtpHost) {
+  const manualConnectHost = (process.env.SMTP_CONNECT_HOST || '').trim();
+  if (manualConnectHost) {
+    return {
+      host: manualConnectHost,
+      servername: (process.env.SMTP_TLS_SERVERNAME || smtpHost).trim() || smtpHost,
+      source: 'manual',
+    };
+  }
+
+  if (!smtpHost) return { host: smtpHost, servername: smtpHost, source: 'direct' };
+
+  const forceIpv4 = String(process.env.SMTP_FORCE_IPV4 || 'true').toLowerCase() === 'true';
+  if (!forceIpv4 || net.isIP(smtpHost)) {
+    return { host: smtpHost, servername: smtpHost, source: 'direct' };
+  }
+
+  try {
+    const ipv4Records = await dns.promises.resolve4(smtpHost);
+    if (Array.isArray(ipv4Records) && ipv4Records.length > 0) {
+      return { host: ipv4Records[0], servername: smtpHost, source: 'resolve4' };
+    }
+  } catch (error) {
+    logger.warn('Could not resolve SMTP host to IPv4, falling back to hostname', {
+      host: smtpHost,
+      error: error.message,
+      code: error.code,
+    });
+  }
+
+  return { host: smtpHost, servername: smtpHost, source: 'direct-fallback' };
+}
+
+async function getTransporter() {
   if (transporter) return transporter;
 
   const hasSmtpConfig = process.env.SMTP_HOST
@@ -29,19 +63,32 @@ function getTransporter() {
     && process.env.SMTP_PASS;
 
   if (hasSmtpConfig) {
+    const smtpHost = process.env.SMTP_HOST.trim();
+    const resolved = await resolveConnectHost(smtpHost);
+
     transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
+      host: resolved.host,
       port: Number(process.env.SMTP_PORT),
       secure: toBool(process.env.SMTP_SECURE),
-      family: Number(process.env.SMTP_IP_FAMILY || 4),
       connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 10000),
       greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS || 10000),
       socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 15000),
+      tls: {
+        servername: resolved.servername,
+      },
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
     });
+
+    logger.info('SMTP transporter configured', {
+      host: resolved.host,
+      source: resolved.source,
+      port: Number(process.env.SMTP_PORT),
+      secure: toBool(process.env.SMTP_SECURE),
+    });
+
     return transporter;
   }
 
@@ -62,7 +109,8 @@ async function sendPasswordResetEmail({ to, resetUrl }) {
   };
 
   try {
-    const info = await getTransporter().sendMail(payload);
+    const transport = await getTransporter();
+    const info = await transport.sendMail(payload);
 
     if (!process.env.SMTP_HOST) {
       logger.info('SMTP not configured. Password reset email captured locally', { resetUrl });
