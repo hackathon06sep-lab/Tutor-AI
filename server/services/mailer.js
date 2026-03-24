@@ -15,6 +15,10 @@ function toBool(value) {
   return String(value).toLowerCase() === 'true';
 }
 
+function shouldUseBrevoApiFallback() {
+  return String(process.env.BREVO_API_FALLBACK || 'true').toLowerCase() === 'true';
+}
+
 function shouldFailOpen() {
   // Default is fail-open to preserve generic forgot-password UX.
   // Set SMTP_FAIL_OPEN=false in production to fail when SMTP is unavailable.
@@ -95,6 +99,51 @@ async function getTransporter() {
   return transporter;
 }
 
+function parseFromAddress(fromValue) {
+  const from = String(fromValue || '').trim();
+  const match = from.match(/^(.*)<([^>]+)>$/);
+  if (match) {
+    return {
+      name: match[1].trim().replace(/^"|"$/g, ''),
+      email: match[2].trim(),
+    };
+  }
+  return { name: 'TutorAI', email: from || 'no-reply@tutorai.local' };
+}
+
+async function sendViaBrevoApi(payload) {
+  const apiKey = (process.env.BREVO_API_KEY || '').trim();
+  if (!apiKey || !shouldUseBrevoApiFallback()) return null;
+
+  const sender = parseFromAddress(payload.from);
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': apiKey,
+      Accept: 'application/json',
+    },
+    body: JSON.stringify({
+      sender,
+      to: [{ email: payload.to }],
+      subject: payload.subject,
+      htmlContent: payload.html,
+      textContent: payload.text,
+    }),
+  });
+
+  if (!response.ok) {
+    const responseText = await response.text();
+    const error = new Error(`Brevo API error: ${response.status}`);
+    error.code = 'BREVO_API_ERROR';
+    error.details = responseText;
+    throw error;
+  }
+
+  const result = await response.json();
+  return { delivered: true, provider: 'brevo-api', info: result };
+}
+
 async function sendPasswordResetEmail({ to, resetUrl }) {
   const from = process.env.SMTP_FROM || 'TutorAI <no-reply@tutorai.local>';
 
@@ -162,6 +211,21 @@ async function sendPasswordResetEmail({ to, resetUrl }) {
       error: error.message,
       code: error.code,
     });
+
+    try {
+      const apiFallback = await sendViaBrevoApi(payload);
+      if (apiFallback?.delivered) {
+        logger.info('Password reset email delivered via Brevo API fallback', {
+          provider: apiFallback.provider,
+        });
+        return apiFallback;
+      }
+    } catch (apiError) {
+      logger.warn('Brevo API fallback failed', {
+        error: apiError.message,
+        code: apiError.code,
+      });
+    }
 
     if (process.env.SMTP_HOST && !shouldFailOpen()) {
       throw error;
