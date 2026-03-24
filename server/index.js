@@ -8,6 +8,7 @@ const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 const logger = require('./services/logger');
 const { metricsMiddleware, getMetricsSnapshot } = require('./middleware/metrics');
+const User = require('./models/User');
 
 const app = express();
 
@@ -109,6 +110,9 @@ app.use((err, req, res, next) => {
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     logger.info('MongoDB connected');
+    return repairUserIndexes();
+  })
+  .then(() => {
     app.listen(process.env.PORT || 5000, () => {
       logger.info(`Server running on port ${process.env.PORT || 5000}`);
     });
@@ -126,3 +130,24 @@ process.on('uncaughtException', (err) => {
   logger.fatal('Uncaught exception', { error: err.message, stack: err.stack });
   process.exit(1);
 });
+
+async function repairUserIndexes() {
+  try {
+    // Legacy deployments may still have a unique phoneNumber index that rejects
+    // inserts where phoneNumber is missing/null. Remove it and sync to schema.
+    await User.collection.dropIndex('phoneNumber_1');
+    logger.info('Dropped legacy User index phoneNumber_1');
+  } catch (err) {
+    const notFound = err?.codeName === 'IndexNotFound' || err?.code === 27;
+    if (!notFound) {
+      logger.warn('Could not drop legacy User index phoneNumber_1', { error: err.message });
+    }
+  }
+
+  try {
+    await User.syncIndexes();
+    logger.info('User indexes synced with schema');
+  } catch (err) {
+    logger.warn('Failed to sync User indexes', { error: err.message });
+  }
+}
