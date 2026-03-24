@@ -26,6 +26,7 @@ server/.env
 *.njsproj
 *.sln
 *.sw?
+.github
 
 repomix-output.xml
 
