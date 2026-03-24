@@ -20,6 +20,20 @@ const loginLimiter = rateLimit({
   message: { error: 'Too many login attempts. Please try again later.' },
 });
 
+function isValidEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+function getPasswordValidationError(password) {
+  if (typeof password !== 'string' || password.length < 8) {
+    return 'Password must be at least 8 characters long';
+  }
+  if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
+    return 'Password must include at least one letter and one number';
+  }
+  return '';
+}
+
 function buildCookieBaseOptions() {
   const isProd = process.env.NODE_ENV === 'production';
   return {
@@ -50,8 +64,17 @@ router.post('/register', async (req, res) => {
     return res.status(400).json({ error: 'Name, email, and password are required' });
   }
 
-  if (password.length < 8) {
-    return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+  if (normalizedName.length < 2) {
+    return res.status(400).json({ error: 'Name must be at least 2 characters long' });
+  }
+
+  if (!isValidEmail(normalizedEmail)) {
+    return res.status(400).json({ error: 'Please enter a valid email address' });
+  }
+
+  const passwordError = getPasswordValidationError(password);
+  if (passwordError) {
+    return res.status(400).json({ error: passwordError });
   }
 
   try {
@@ -70,8 +93,11 @@ router.post('/register', async (req, res) => {
     if (err?.code === 11000 && err?.keyPattern?.email) {
       return res.status(400).json({ error: 'Email already in use' });
     }
+    if (err?.name === 'ValidationError') {
+      return res.status(400).json({ error: 'Invalid account details. Please check your inputs.' });
+    }
     console.error('Register error:', err);
-    return res.status(500).json({ error: 'Server error' });
+    return res.status(500).json({ error: 'Could not create account right now. Please try again.' });
   }
 });
 
@@ -136,8 +162,9 @@ router.post('/reset-password', async (req, res) => {
     return res.status(400).json({ error: 'Token and password are required' });
   }
 
-  if (password.length < 8) {
-    return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+  const passwordError = getPasswordValidationError(password);
+  if (passwordError) {
+    return res.status(400).json({ error: passwordError });
   }
 
   try {
