@@ -28,8 +28,17 @@ function getPasswordValidationError(password) {
   if (typeof password !== 'string' || password.length < 8) {
     return 'Password must be at least 8 characters long';
   }
-  if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) {
-    return 'Password must include at least one letter and one number';
+  if (!/[A-Z]/.test(password)) {
+    return 'Password must include at least one uppercase letter';
+  }
+  if (!/[a-z]/.test(password)) {
+    return 'Password must include at least one lowercase letter';
+  }
+  if (!/\d/.test(password)) {
+    return 'Password must include at least one number';
+  }
+  if (!/[^A-Za-z0-9]/.test(password)) {
+    return 'Password must include at least one special character';
   }
   return '';
 }
@@ -128,15 +137,16 @@ router.post('/login', loginLimiter, async (req, res) => {
 
 router.post('/forgot-password', async (req, res) => {
   const { email } = req.body;
+  const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
 
-  if (!email) {
+  if (!normalizedEmail) {
     return res.status(400).json({ error: 'Email is required' });
   }
 
   const genericMessage = 'If that email exists, a reset link has been sent.';
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) return res.status(200).json({ message: genericMessage });
 
     const { rawToken, hashedToken } = buildResetToken();
@@ -146,12 +156,15 @@ router.post('/forgot-password', async (req, res) => {
 
     const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
     const resetUrl = `${clientUrl}/reset-password?token=${rawToken}`;
-    await sendPasswordResetEmail({ to: user.email, resetUrl });
+    const delivery = await sendPasswordResetEmail({ to: user.email, resetUrl });
+    if (!delivery.delivered) {
+      console.warn('Forgot password email sent via fallback transport:', delivery.error || 'smtp unavailable');
+    }
 
     return res.status(200).json({ message: genericMessage });
   } catch (err) {
     console.error('Forgot password error:', err);
-    return res.status(500).json({ error: 'Could not process password reset request' });
+    return res.status(500).json({ error: 'Could not process password reset request. Please try again.' });
   }
 });
 
