@@ -361,10 +361,10 @@ export default function Chat() {
       <Sidebar />
 
       {/* Left sidebar handled by Sidebar component — right context panel */}
-      <main className="ml-[240px] mr-[280px] h-screen flex flex-col bg-surface-container-low relative">
+      <main className="ml-0 lg:ml-[240px] mr-0 2xl:mr-[280px] h-screen flex flex-col bg-surface-container-low relative">
 
         {/* Header */}
-        <header className="h-16 flex items-center justify-between px-8 bg-[#0d0d18]/40 backdrop-blur-xl z-40 border-b border-outline-variant/10">
+        <header className="min-h-16 flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 sm:px-8 py-3 sm:py-0 bg-[#0d0d18]/40 backdrop-blur-xl z-40 border-b border-outline-variant/10">
           <div className="flex items-center gap-2">
             <select
               value={topic}
@@ -388,7 +388,7 @@ export default function Chat() {
               {TOPICS.map(t => <option key={t} value={t} style={{ backgroundColor: '#1e1e2d', color: '#e9e6f7' }}>{t}</option>)}
             </select>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-4">
             {isStreaming && (
               <span className="inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-primary" />
@@ -426,7 +426,7 @@ export default function Chat() {
         </header>
 
         {/* Messages */}
-        <section className="flex-1 overflow-y-auto px-8 py-12 flex flex-col gap-12 max-w-4xl mx-auto w-full"
+        <section className="flex-1 overflow-y-auto px-4 sm:px-8 py-8 sm:py-12 flex flex-col gap-8 sm:gap-12 max-w-4xl mx-auto w-full"
                  style={{ scrollbarWidth: 'thin', scrollbarColor: '#474754 transparent' }}>
           {messages.map((msg, i) => <Message key={i} {...msg} />)}
           {loading && <TypingIndicator />}
@@ -434,7 +434,7 @@ export default function Chat() {
         </section>
 
         {/* Input */}
-        <footer className="p-8 pt-0 bg-gradient-to-t from-surface-container-low via-surface-container-low to-transparent">
+        <footer className="p-4 sm:p-8 pt-0 bg-gradient-to-t from-surface-container-low via-surface-container-low to-transparent">
           <div className="max-w-4xl mx-auto relative group">
             <div className="absolute inset-0 bg-primary/5 blur-2xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"/>
             <div className="relative bg-surface-container-high rounded-xl border border-outline-variant/20 p-4 shadow-xl focus-within:border-primary/40 transition-all">
@@ -447,7 +447,7 @@ export default function Chat() {
                 rows={2}
                 className="w-full bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-outline resize-none outline-none"
               />
-              <div className="flex justify-between items-center mt-2">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center mt-2 gap-3">
                 <div className="flex items-center gap-3">
                   <span className="text-[0.6875rem] text-on-surface-variant tracking-wide px-1 uppercase font-semibold">
                     Enter to send · Shift+Enter for new line
@@ -459,7 +459,7 @@ export default function Chat() {
                     </span>
                   )}
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 self-end sm:self-auto">
                   <button
                     type="button"
                     disabled
@@ -487,7 +487,7 @@ export default function Chat() {
       </main>
 
       {/* Right context panel */}
-      <aside className="w-[280px] h-full fixed right-0 top-0 bg-surface flex flex-col z-30 border-l border-outline-variant/10">
+      <aside className="hidden 2xl:flex w-[280px] h-full fixed right-0 top-0 bg-surface flex-col z-30 border-l border-outline-variant/10">
         <div className="h-16 flex items-center px-6 border-b border-outline-variant/10">
           <span className="text-xs font-bold tracking-widest uppercase text-primary">Context &amp; Resources</span>
         </div>

@@ -87,7 +87,7 @@ export default function PDFGenerator() {
     <div className="bg-surface text-on-surface min-h-screen font-['Plus_Jakarta_Sans']">
       <Sidebar />
 
-      <main className="ml-[240px] min-h-screen flex items-center justify-center p-8 bg-surface relative overflow-hidden">
+      <main className="ml-0 lg:ml-[240px] min-h-screen flex items-center justify-center p-4 sm:p-8 bg-surface relative overflow-hidden">
         {/* Ambient glows */}
         <div className="absolute top-[-10%] left-[-5%] w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"/>
         <div className="absolute bottom-[-10%] right-[-5%] w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none"/>

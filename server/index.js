@@ -13,6 +13,8 @@ const User = require('./models/User');
 const app = express();
 
 app.disable('x-powered-by');
+// Railway sits behind a reverse proxy, so trust forwarded headers for IP/rate-limit.
+app.set('trust proxy', 1);
 
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
   .split(/[\s,]+/)

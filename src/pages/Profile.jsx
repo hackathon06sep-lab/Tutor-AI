@@ -82,7 +82,7 @@ export default function Profile() {
     <div className="min-h-screen bg-surface text-on-surface font-['Plus_Jakarta_Sans']">
       <Sidebar />
 
-      <main className="ml-[240px] p-8">
+      <main className="ml-0 lg:ml-[240px] p-4 sm:p-8">
         <header className="mb-8 flex items-start justify-between gap-6">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Your Profile</h1>

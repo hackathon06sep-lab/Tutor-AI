@@ -22,7 +22,7 @@ function TopicInput({ onGenerate, loading, error, validationError, setValidation
   const [topic, setTopic] = useState('');
 
   return (
-    <main className="ml-[240px] min-h-screen flex flex-col items-center justify-center p-8 bg-[#0d0d18] relative overflow-hidden">
+    <main className="ml-0 lg:ml-[240px] min-h-screen flex flex-col items-center justify-center p-4 sm:p-8 bg-[#0d0d18] relative overflow-hidden">
       <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"/>
       <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-secondary/5 rounded-full blur-[100px] pointer-events-none"/>
 
@@ -36,7 +36,7 @@ function TopicInput({ onGenerate, loading, error, validationError, setValidation
         </div>
 
         <div className="space-y-4">
-          <h2 className="text-6xl font-extrabold tracking-tighter text-on-surface leading-tight">Quiz yourself</h2>
+          <h2 className="text-4xl sm:text-6xl font-extrabold tracking-tighter text-on-surface leading-tight">Quiz yourself</h2>
           <p className="text-lg text-on-surface-variant font-medium tracking-wide">
             Enter any topic and get 5 AI-generated questions
           </p>
@@ -58,7 +58,7 @@ function TopicInput({ onGenerate, loading, error, validationError, setValidation
               }}
               onKeyDown={e => e.key === 'Enter' && onGenerate(topic)}
               placeholder="e.g. Photosynthesis, World War II, Algebra..."
-              className="w-full border-none rounded-xl py-6 px-8 text-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-primary/40 focus:bg-surface-container-highest transition-all duration-500 shadow-2xl outline-none"
+              className="w-full border-none rounded-xl py-4 sm:py-6 px-5 sm:px-8 text-base sm:text-xl text-on-surface placeholder:text-outline/50 focus:ring-2 focus:ring-primary/40 focus:bg-surface-container-highest transition-all duration-500 shadow-2xl outline-none"
               style={{ background: 'rgba(30,30,45,0.4)', backdropFilter: 'blur(20px)' }}
             />
             <div className="absolute inset-0 rounded-xl border border-outline-variant/10 pointer-events-none group-focus-within:border-primary/20 transition-colors"/>
@@ -154,11 +154,11 @@ function ActiveQuestion({ question, options, topic, current, total, onAnswer }) 
   };
 
   return (
-    <main className="ml-[240px] min-h-screen flex flex-col relative overflow-hidden">
+    <main className="ml-0 lg:ml-[240px] min-h-screen flex flex-col relative overflow-hidden">
       <div className="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 blur-[120px] rounded-full pointer-events-none"/>
       <div className="absolute bottom-0 left-1/4 w-[600px] h-[600px] bg-secondary-container/5 blur-[150px] rounded-full pointer-events-none"/>
 
-      <section className="max-w-4xl w-full mx-auto flex flex-col flex-1 px-12 py-16 z-10">
+      <section className="max-w-4xl w-full mx-auto flex flex-col flex-1 px-4 sm:px-8 lg:px-12 py-8 sm:py-16 z-10">
         {/* Progress */}
         <header className="flex items-center justify-between mb-12">
           <div className="flex flex-col gap-2">
@@ -168,7 +168,7 @@ function ActiveQuestion({ question, options, topic, current, total, onAnswer }) 
           <div className="flex flex-col items-end gap-3">
             <div className="flex gap-2">
               {Array.from({ length: total }).map((_, i) => (
-                <div key={i} className={`h-1.5 w-10 rounded-full ${
+                <div key={i} className={`h-1.5 w-6 sm:w-10 rounded-full ${
                   i < current
                     ? 'bg-primary shadow-[0_0_10px_rgba(189,157,255,0.4)]'
                     : 'bg-outline-variant/30'
@@ -180,14 +180,14 @@ function ActiveQuestion({ question, options, topic, current, total, onAnswer }) 
         </header>
 
         {/* Question Card */}
-        <div className="rounded-[2rem] p-12 mb-8 relative border border-outline-variant/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] bg-surface-container-low">
+        <div className="rounded-[2rem] p-6 sm:p-12 mb-8 relative border border-outline-variant/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)] bg-surface-container-low">
           <div className="absolute top-8 left-8">
             <span className="text-[10px] font-bold text-on-surface-variant bg-surface-container-highest px-2 py-1 rounded tracking-widest uppercase">
               Question {current}
             </span>
           </div>
           <div className="mt-8">
-            <h3 className="text-3xl font-bold text-on-surface leading-snug">{question.question}</h3>
+            <h3 className="text-xl sm:text-3xl font-bold text-on-surface leading-snug">{question.question}</h3>
           </div>
         </div>
 
@@ -244,7 +244,7 @@ function ActiveQuestion({ question, options, topic, current, total, onAnswer }) 
 
         {/* Footer */}
         {selected && (
-          <footer className="flex items-center justify-between py-8 gap-6">
+          <footer className="flex flex-col lg:flex-row lg:items-center justify-between py-8 gap-6">
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selected === question.answer ? 'bg-[#4ade80]/10' : 'bg-error/10'}`}>
                 <span className={`material-symbols-outlined ${selected === question.answer ? 'text-[#4ade80]' : 'text-error'}`}>
@@ -261,11 +261,11 @@ function ActiveQuestion({ question, options, topic, current, total, onAnswer }) 
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
               <button
                 onClick={fetchExplanation}
                 disabled={loadingExplanation || showExplanation}
-                className="group flex items-center gap-2 py-3 px-6 text-sm font-semibold text-on-surface border border-outline-variant/40 rounded-lg hover:bg-surface-container-high hover:border-primary/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group flex items-center justify-center gap-2 py-3 px-6 text-sm font-semibold text-on-surface border border-outline-variant/40 rounded-lg hover:bg-surface-container-high hover:border-primary/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="material-symbols-outlined text-base">help</span>
                 {loadingExplanation ? 'Loading...' : showExplanation ? 'Explanation Shown' : 'Show Explanation'}
@@ -273,7 +273,7 @@ function ActiveQuestion({ question, options, topic, current, total, onAnswer }) 
               
               <button
                 onClick={() => onAnswer(selected === question.answer)}
-                className="group flex items-center gap-3 py-3 px-8 text-on-primary font-bold rounded-lg shadow-[0_10px_30px_rgba(189,157,255,0.2)] hover:shadow-[0_15px_40px_rgba(189,157,255,0.3)] transition-all active:scale-95"
+                className="group flex items-center justify-center gap-3 py-3 px-8 text-on-primary font-bold rounded-lg shadow-[0_10px_30px_rgba(189,157,255,0.2)] hover:shadow-[0_15px_40px_rgba(189,157,255,0.3)] transition-all active:scale-95"
                 style={{ background: 'linear-gradient(90deg, #bd9dff, #8a4cfc)' }}
               >
                 <span>{current >= total ? 'See Results' : 'Next Question'}</span>
@@ -293,7 +293,7 @@ function ScoreScreen({ score, total, topic, answers, onRetry, onNew }) {
   const pct = Math.round((score / total) * 100);
 
   return (
-    <main className="ml-[240px] min-h-screen flex items-center justify-center p-8 bg-[#0d0d18]">
+    <main className="ml-0 lg:ml-[240px] min-h-screen flex items-center justify-center p-4 sm:p-8 bg-[#0d0d18]">
       <div className="w-full max-w-2xl space-y-6">
 
         {/* Score card */}
@@ -437,7 +437,7 @@ export default function Quiz() {
     <div className="bg-surface text-on-surface min-h-screen font-['Plus_Jakarta_Sans']">
       <Sidebar />
       {phase === 'quiz-loading' && (
-        <main className="ml-[240px] min-h-screen flex items-center justify-center">
+        <main className="ml-0 lg:ml-[240px] min-h-screen flex items-center justify-center p-4">
           <div className="text-center">
             <div className="animate-spin material-symbols-outlined text-primary text-5xl">progress_activity</div>
             <p className="text-on-surface-variant mt-4">

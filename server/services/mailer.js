@@ -26,6 +26,7 @@ function getTransporter() {
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
       secure: toBool(process.env.SMTP_SECURE),
+      family: Number(process.env.SMTP_IP_FAMILY || 4),
       connectionTimeout: Number(process.env.SMTP_CONNECTION_TIMEOUT_MS || 10000),
       greetingTimeout: Number(process.env.SMTP_GREETING_TIMEOUT_MS || 10000),
       socketTimeout: Number(process.env.SMTP_SOCKET_TIMEOUT_MS || 15000),

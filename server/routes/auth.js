@@ -154,7 +154,11 @@ router.post('/forgot-password', async (req, res) => {
     user.passwordResetExpires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
     await user.save();
 
-    const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+    const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173')
+      .split(/[\s,]+/)
+      .find(Boolean)
+      .trim()
+      .replace(/\/$/, '');
     const resetUrl = `${clientUrl}/reset-password?token=${rawToken}`;
     const delivery = await sendPasswordResetEmail({ to: user.email, resetUrl });
     if (!delivery.delivered) {

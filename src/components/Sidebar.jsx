@@ -51,7 +51,7 @@ export default function Sidebar() {
     : 'PK';
 
   return (
-    <aside className="h-screen w-[240px] fixed left-0 top-0 flex flex-col bg-[#12121e] border-r border-[#474754]/15 font-['Plus_Jakarta_Sans'] font-medium text-sm tracking-wide py-8 px-4 justify-between z-50">
+    <aside className="hidden lg:flex h-screen w-[240px] fixed left-0 top-0 flex-col bg-[#12121e] border-r border-[#474754]/15 font-['Plus_Jakarta_Sans'] font-medium text-sm tracking-wide py-8 px-4 justify-between z-50">
 
       <div className="flex flex-col gap-6">
         {/* Logo */}
