@@ -7,6 +7,12 @@ function toBool(value) {
   return String(value).toLowerCase() === 'true';
 }
 
+function shouldFailOpen() {
+  // Default is fail-open to preserve generic forgot-password UX.
+  // Set SMTP_FAIL_OPEN=false in production to fail when SMTP is unavailable.
+  return String(process.env.SMTP_FAIL_OPEN || 'true').toLowerCase() === 'true';
+}
+
 function getTransporter() {
   if (transporter) return transporter;
 
@@ -60,6 +66,10 @@ async function sendPasswordResetEmail({ to, resetUrl }) {
       error: error.message,
       code: error.code,
     });
+
+    if (process.env.SMTP_HOST && !shouldFailOpen()) {
+      throw error;
+    }
 
     // Fallback keeps forgot-password endpoint functional even if SMTP provider is down.
     const fallbackTransport = nodemailer.createTransport({ jsonTransport: true });
