@@ -1,5 +1,12 @@
 const nodemailer = require('nodemailer');
+const dns = require('node:dns');
 const logger = require('./logger');
+
+try {
+  dns.setDefaultResultOrder('ipv4first');
+} catch {
+  // Ignore when unavailable on older Node runtimes.
+}
 
 let transporter;
 
