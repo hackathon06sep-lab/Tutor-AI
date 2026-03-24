@@ -2,7 +2,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://tutor-ai-production-ed38.up.railway.app/api/:path*"
+      "destination": "https://tutor-ai-production-e811.up.railway.app/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

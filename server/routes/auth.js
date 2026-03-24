@@ -43,8 +43,10 @@ function buildResetToken() {
 
 router.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
+  const normalizedName = typeof name === 'string' ? name.trim() : '';
+  const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
 
-  if (!name || !email || !password) {
+  if (!normalizedName || !normalizedEmail || !password) {
     return res.status(400).json({ error: 'Name, email, and password are required' });
   }
 
@@ -53,11 +55,11 @@ router.post('/register', async (req, res) => {
   }
 
   try {
-    const existing = await User.findOne({ email });
+    const existing = await User.findOne({ email: normalizedEmail });
     if (existing) return res.status(400).json({ error: 'Email already in use' });
 
     const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, email, password: hashed });
+    const user = await User.create({ name: normalizedName, email: normalizedEmail, password: hashed });
 
     issueAuthCookie(res, user._id.toString());
 
@@ -65,6 +67,9 @@ router.post('/register', async (req, res) => {
       user: { id: user._id, name: user.name, email: user.email },
     });
   } catch (err) {
+    if (err?.code === 11000 && err?.keyPattern?.email) {
+      return res.status(400).json({ error: 'Email already in use' });
+    }
     console.error('Register error:', err);
     return res.status(500).json({ error: 'Server error' });
   }
