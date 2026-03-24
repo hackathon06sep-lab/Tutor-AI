@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import Sidebar from '../components/Sidebar';
+import { apiFetch } from '../utils/api';
 
 const SUGGESTED = ['Quantum Physics', 'Ancient Rome', 'Organic Chemistry', 'Linear Algebra', 'DNA & Genetics'];
 
@@ -122,7 +123,7 @@ function ActiveQuestion({ question, options, topic, current, total, onAnswer }) 
     setLoadingExplanation(true);
 
     try {
-      const res = await fetch('/api/quiz/explain', {
+      const res = await apiFetch('/api/quiz/explain', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -385,7 +386,7 @@ export default function Quiz() {
     setError('');
     setTopic(trimmedTopic);
     try {
-      const res  = await fetch('/api/quiz/generate', {
+      const res  = await apiFetch('/api/quiz/generate', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -417,7 +418,7 @@ export default function Quiz() {
       setAnswers(newAnswers);
       setPhase('score');
       // Save result
-      fetch('/api/quiz/save', {
+      apiFetch('/api/quiz/save', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

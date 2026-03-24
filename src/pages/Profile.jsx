@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../utils/api';
 
 function formatRelativeTime(dateInput) {
   const date = new Date(dateInput);
@@ -41,9 +42,9 @@ export default function Profile() {
       setLoading(true);
       try {
         const [quizRes, pdfRes, chatRes] = await Promise.all([
-          fetch('/api/quiz/history', { credentials: 'include' }),
-          fetch('/api/pdf/history', { credentials: 'include' }),
-          fetch('/api/chat/history', { credentials: 'include' }),
+          apiFetch('/api/quiz/history', { credentials: 'include' }),
+          apiFetch('/api/pdf/history', { credentials: 'include' }),
+          apiFetch('/api/chat/history', { credentials: 'include' }),
         ]);
 
         const [quizData, pdfData, chatData] = await Promise.all([

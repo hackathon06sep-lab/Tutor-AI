@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../utils/api';
 
 const NAV_ITEMS = [
   { path: '/chat', icon: 'chat',           label: 'AI Chat' },
@@ -34,7 +35,7 @@ export default function Sidebar() {
       return;
     }
 
-    fetch('/api/chat/history', { credentials: 'include' })
+    apiFetch('/api/chat/history', { credentials: 'include' })
       .then(r => (r.ok ? r.json() : []))
       .then(data => setRecentChats(Array.isArray(data) ? data.slice(0, 3) : []))
       .catch(() => setRecentChats([]));

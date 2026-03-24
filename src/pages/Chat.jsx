@@ -5,6 +5,7 @@ import remarkBreaks from 'remark-breaks';
 import remarkGfm from 'remark-gfm';
 import { useAuth } from '../context/AuthContext';
 import Sidebar from '../components/Sidebar';
+import { apiFetch, apiUrl } from '../utils/api';
 
 const TOPICS = ['Mathematics', 'Science', 'History', 'English', 'Coding', 'General'];
 const INITIAL_ASSISTANT_MESSAGE = "Hello! I'm ready to help you learn. What topic would you like to explore today?";
@@ -168,7 +169,7 @@ export default function Chat() {
     if (!sessionFromQuery) return;
 
     setLoading(true);
-    fetch(`/api/chat/history/${sessionFromQuery}`, { credentials: 'include' })
+    apiFetch(`/api/chat/history/${sessionFromQuery}`, { credentials: 'include' })
       .then(async (res) => {
         if (!res.ok) throw new Error('Failed to load chat session');
         return res.json();
@@ -199,7 +200,7 @@ export default function Chat() {
   useEffect(() => () => closeStream(), []);
 
   const sendMessageFallback = async (userMsg) => {
-    const res = await fetch('/api/chat', {
+    const res = await apiFetch('/api/chat', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -215,7 +216,7 @@ export default function Chat() {
   };
 
   const sendMessageStreaming = async (userMsg) => {
-    const initRes = await fetch('/api/chat/stream-init', {
+    const initRes = await apiFetch('/api/chat/stream-init', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
@@ -255,7 +256,7 @@ export default function Chat() {
         }, STREAM_IDLE_TIMEOUT_MS);
       };
 
-      const es = new EventSource(`/api/chat/stream/${initData.streamId}`, { withCredentials: true });
+      const es = new EventSource(apiUrl(`/api/chat/stream/${initData.streamId}`), { withCredentials: true });
       streamRef.current = es;
       setIsStreaming(true);
       bumpIdleTimer();

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../utils/api';
 
 export default function Signin() {
   const [form,         setForm]         = useState({ email: '', password: '' });
@@ -17,7 +18,7 @@ export default function Signin() {
     setError('');
     setLoading(true);
     try {
-      const res  = await fetch('/api/auth/login', {
+      const res  = await apiFetch('/api/auth/login', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

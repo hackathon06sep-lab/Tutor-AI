@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../utils/api';
 
 const GRADE_LEVELS = [
   'Secondary (Grades 6–10)',
@@ -41,7 +42,7 @@ export default function PDFGenerator() {
   useEffect(() => {
     if (!token) return;
 
-    fetch('/api/pdf/history', { credentials: 'include' })
+    apiFetch('/api/pdf/history', { credentials: 'include' })
       .then(async (res) => {
         if (!res.ok) throw new Error('Failed to load assignment history');
         return res.json();
@@ -60,7 +61,7 @@ export default function PDFGenerator() {
     setLoading(true); setSuccess(false); setError('');
 
     try {
-      const res = await fetch('/api/pdf/generate', {
+      const res = await apiFetch('/api/pdf/generate', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
