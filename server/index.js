@@ -13,6 +13,11 @@ const app = express();
 
 app.disable('x-powered-by');
 
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+  .split(/[\s,]+/)
+  .map((value) => value.trim().replace(/\/$/, ''))
+  .filter(Boolean);
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
@@ -22,7 +27,17 @@ const authLimiter = rateLimit({
 });
 
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173',
+  origin: (origin, callback) => {
+    // Allow server-to-server and same-origin requests without an Origin header.
+    if (!origin) return callback(null, true);
+
+    const normalizedOrigin = origin.trim().replace(/\/$/, '');
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    return callback(null, false);
+  },
   credentials: true,
 }));
 
