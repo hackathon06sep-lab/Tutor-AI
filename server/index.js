@@ -108,21 +108,21 @@ app.use((err, req, res, next) => {
   return res.status(500).json({ error: 'Server error' });
 });
 
-// MongoDB connection + server start
+// Server start
+const port = process.env.PORT || 5000;
+app.listen(port, '0.0.0.0', () => {
+  logger.info(`Server running on port ${port}`);
+});
+
+// MongoDB connection
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     logger.info('MongoDB connected');
     return repairUserIndexes();
   })
-  .then(() => {
-    const port = process.env.PORT || 5000;
-    app.listen(port, '0.0.0.0', () => {
-      logger.info(`Server running on port ${port}`);
-    });
-  })
   .catch(err => {
     logger.error('MongoDB connection error', { error: err.message, stack: err.stack });
-    process.exit(1);
+    // Don't exit process immediately if DB fails, allow health checks to respond
   });
 
 process.on('unhandledRejection', (reason) => {
