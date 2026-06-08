@@ -1,5 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@300;400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -44,13 +46,30 @@ body {
 
 
 
-// 
-body {
-  background: radial-gradient(circle at 30% 30%, #1a1028, #050509);
-  animation: bgShift 10s infinite alternate;
-}
-
 @keyframes bgShift {
   0% { background-position: 30% 30%; }
   100% { background-position: 70% 70%; }
 }
+
+/* Landing page keyframes */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+@keyframes ragPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+@keyframes diffGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(189,157,255,0.22), 0 0 22px rgba(189,157,255,0.08); }
+  50%       { box-shadow: 0 0 20px rgba(189,157,255,0.5),  0 0 40px rgba(189,157,255,0.18); }
+}
+@keyframes sseStream {
+  0%  { width: 0; }
+  100% { width: 100%; }
+}
+.cursor-blink   { animation: blink 0.9s step-end infinite; }
+.rag-pulse      { animation: ragPulse 1.8s ease-in-out infinite; }
+.diff-glow      { animation: diffGlow 2s ease-in-out infinite; }
+.font-playfair  { font-family: 'Playfair Display', Georgia, serif; }
+.font-fira      { font-family: 'Fira Code', 'Courier New', monospace; }

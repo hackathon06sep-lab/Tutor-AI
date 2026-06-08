@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TutorAI — RAG-Powered AI Tutoring Platform</title>
+  <meta name="description" content="TutorAI is a production-grade AI tutoring platform with SSE streaming, RAG knowledge engine, adaptive difficulty, context-aware quiz generation, and server-side PDF assignment generation." />
+  <meta property="og:title" content="TutorAI — RAG-Powered AI Tutoring Platform" />
+  <meta property="og:description" content="Real-time SSE streaming, RAG knowledge engine, adaptive difficulty, context-aware quizzes. Not a chatbot wrapper." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0d0d18;
+      --surface:  #181826;
+      --text:     #e9e6f7;
+      --muted:    #aba9b9;
+      --primary:  #bd9dff;
+      --secondary:#a88cfb;
+      --tertiary: #ff97b2;
+      --outline:  #474754;
+      --error:    #ff6e84;
+      --green:    #4ade80;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ─── NAV ─── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 60px;
+      border-bottom: 1px solid rgba(71,71,84,0.4);
+      background: rgba(13,13,24,0.85);
+      backdrop-filter: blur(12px);
+    }
+
+    .nav-logo {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+      color: var(--primary);
+      letter-spacing: 0.08em;
+    }
+    .nav-logo span { color: var(--muted); }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .nav-cta {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: var(--bg);
+      background: var(--primary);
+      border: none;
+      padding: 9px 22px;
+      border-radius: 0;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s;
+    }
+    .nav-cta:hover { background: var(--secondary); }
+
+    /* ─── HERO ─── */
+    #hero {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      align-items: center;
+      padding: 100px 60px 60px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bloom {
+      position: absolute;
+      top: 50%;
+      left: 30%;
+      transform: translate(-50%, -50%);
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(189,157,255,0.04) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .hero-left { position: relative; z-index: 1; padding-right: 48px; }
+
+    .hero-eyebrow {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--primary);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .hero-eyebrow::before {
+      content: '';
+      display: inline-block;
+      width: 24px; height: 1px;
+      background: var(--primary);
+    }
+
+    .hero-headline {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(3rem, 5vw, 4.4rem);
+      font-weight: 700;
+      line-height: 1.08;
+      color: var(--text);
+      margin-bottom: 24px;
+    }
+    .hero-headline em {
+      font-style: italic;
+      color: var(--primary);
+    }
+
+    .hero-sub {
+      font-size: 1.02rem;
+      color: var(--muted);
+      max-width: 440px;
+      line-height: 1.7;
+      margin-bottom: 36px;
+    }
+    .hero-sub strong { color: var(--text); font-weight: 600; }
+
+    .hero-actions { display: flex; gap: 14px; align-items: center; }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: var(--bg);
+      background: var(--primary);
+      border: none;
+      padding: 13px 28px;
+      border-radius: 0;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-primary:hover { background: var(--secondary); transform: translateY(-1px); }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      background: transparent;
+      border: 1px solid var(--outline);
+      padding: 13px 28px;
+      border-radius: 0;
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .btn-ghost:hover { color: var(--text); border-color: var(--primary); }
+
+    /* ─── FAKE CHAT WIDGET ─── */
+    .hero-right { position: relative; z-index: 1; }
+
+    .chat-widget {
+      background: var(--surface);
+      border: 1px solid var(--outline);
+      padding: 0;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(189,157,255,0.06);
+    }
+
+    .chat-titlebar {
+      background: rgba(71,71,84,0.2);
+      border-bottom: 1px solid var(--outline);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .dot-r { background: var(--error); }
+    .dot-y { background: #f5a623; }
+    .dot-g { background: var(--green); }
+    .chat-titlebar-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-left: auto;
+      letter-spacing: 0.08em;
+    }
+
+    .chat-body { padding: 20px 18px; display: flex; flex-direction: column; gap: 14px; }
+
+    .chat-msg {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .chat-avatar {
+      width: 26px; height: 26px;
+      border-radius: 0;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.6rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    .avatar-user { background: rgba(189,157,255,0.15); color: var(--primary); border: 1px solid rgba(189,157,255,0.3); }
+    .avatar-ai   { background: rgba(168,140,251,0.1);  color: var(--secondary); border: 1px solid rgba(168,140,251,0.25); }
+
+    .chat-bubble {
+      font-size: 0.84rem;
+      line-height: 1.55;
+      padding: 10px 14px;
+      max-width: 90%;
+    }
+    .bubble-user {
+      background: rgba(189,157,255,0.07);
+      color: var(--text);
+      border: 1px solid rgba(189,157,255,0.12);
+    }
+    .bubble-ai {
+      background: rgba(13,13,24,0.8);
+      color: #c8c0e8;
+      border: 1px solid rgba(71,71,84,0.4);
+    }
+
+    .rag-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.62rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      background: rgba(71,71,84,0.25);
+      border: 1px solid rgba(71,71,84,0.5);
+      border-left: 2px solid var(--secondary);
+      padding: 5px 10px;
+      margin: 2px 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .rag-dot {
+      width: 5px; height: 5px;
+      background: var(--secondary);
+      border-radius: 50%;
+      animation: ragPulse 2s ease-in-out infinite;
+    }
+
+    .typing-text {
+      display: inline;
+      color: var(--primary);
+    }
+
+    .cursor-blink {
+      display: inline-block;
+      width: 2px;
+      height: 1em;
+      background: var(--primary);
+      vertical-align: text-bottom;
+      margin-left: 1px;
+      animation: blink 0.9s step-end infinite;
+    }
+
+    .typewriter {
+      overflow: hidden;
+      white-space: normal;
+      opacity: 0;
+    }
+    .typewriter.animate {
+      opacity: 1;
+      animation: typeReveal 3.5s steps(120, end) 1.2s forwards;
+    }
+
+    .chat-footer-sse {
+      border-top: 1px solid var(--outline);
+      padding: 8px 16px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.6rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .sse-indicator {
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: ragPulse 1.4s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    @keyframes ragPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    @keyframes typeReveal {
+      from { clip-path: inset(0 100% 0 0); }
+      to   { clip-path: inset(0 0% 0 0); }
+    }
+
+    /* ─── STATS STRIP ─── */
+    #stats {
+      background: var(--surface);
+      border-top: 1px solid var(--outline);
+      border-bottom: 1px solid var(--outline);
+      padding: 48px 60px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 0 24px;
+      border-right: 1px solid var(--outline);
+    }
+    .stat-item:last-child { border-right: none; }
+
+    .stat-number {
+      font-family: 'Fira Code', monospace;
+      font-size: clamp(2rem, 3.5vw, 2.8rem);
+      font-weight: 500;
+      color: var(--primary);
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    /* ─── FEATURES ─── */
+    #features {
+      padding: 100px 60px;
+    }
+
+    .section-header {
+      margin-bottom: 56px;
+    }
+    .section-eyebrow {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      color: var(--primary);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.2;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr;
+      grid-template-rows: auto auto;
+      gap: 1px;
+      background: var(--outline);
+      border: 1px solid var(--outline);
+    }
+
+    .feat-card {
+      background: var(--surface);
+      padding: 40px 36px;
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+    .feat-card.visible { opacity: 1; transform: none; }
+    .feat-card:nth-child(2) { transition-delay: 0.1s; }
+    .feat-card:nth-child(3) { transition-delay: 0.18s; }
+    .feat-card:nth-child(4) { transition-delay: 0.26s; }
+
+    .feat-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: transparent;
+      transition: background 0.3s;
+    }
+    .feat-card:hover::before { background: var(--primary); }
+
+    .feat-index {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.62rem;
+      color: var(--outline);
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    .feat-title {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 1.18rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+
+    .feat-desc {
+      font-size: 0.86rem;
+      color: var(--muted);
+      line-height: 1.65;
+      margin-bottom: 24px;
+    }
+
+    /* ─── DIFFICULTY LADDER ─── */
+    .difficulty-ladder {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 20px;
+    }
+    .diff-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.64rem;
+      letter-spacing: 0.1em;
+      padding: 5px 12px;
+      border: 1px solid;
+      border-radius: 0;
+      font-weight: 500;
+    }
+    .diff-tag.easy   { color: var(--green); border-color: rgba(74,222,128,0.3); background: rgba(74,222,128,0.05); }
+    .diff-tag.medium { color: #f5a623; border-color: rgba(245,166,35,0.3); background: rgba(245,166,35,0.05); }
+    .diff-tag.hard   {
+      color: var(--primary);
+      border-color: rgba(189,157,255,0.5);
+      background: rgba(189,157,255,0.07);
+      box-shadow: 0 0 10px rgba(189,157,255,0.2), 0 0 20px rgba(189,157,255,0.08);
+      animation: diffGlow 2s ease-in-out infinite;
+    }
+    .diff-arrow { color: var(--muted); font-size: 0.7rem; font-family: 'Fira Code', monospace; }
+
+    @keyframes diffGlow {
+      0%, 100% { box-shadow: 0 0 10px rgba(189,157,255,0.2), 0 0 20px rgba(189,157,255,0.08); }
+      50%       { box-shadow: 0 0 18px rgba(189,157,255,0.45), 0 0 36px rgba(189,157,255,0.15); }
+    }
+
+    .feat-meta {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.64rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      padding: 8px 12px;
+      background: rgba(71,71,84,0.15);
+      border-left: 2px solid var(--secondary);
+      display: inline-block;
+    }
+
+    /* ─── QUIZ CARD ─── */
+    .quiz-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.62rem;
+      color: var(--secondary);
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+      text-transform: uppercase;
+    }
+
+    .mcq-card {
+      background: rgba(13,13,24,0.6);
+      border: 1px solid var(--outline);
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+
+    .mcq-question {
+      font-size: 0.82rem;
+      color: var(--text);
+      margin-bottom: 14px;
+      font-weight: 600;
+      line-height: 1.5;
+    }
+
+    .mcq-options { display: flex; flex-direction: column; gap: 6px; }
+    .mcq-opt {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.78rem;
+      padding: 7px 10px;
+      border: 1px solid var(--outline);
+    }
+    .opt-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      width: 18px;
+      flex-shrink: 0;
+      color: var(--muted);
+    }
+    .mcq-opt.correct {
+      background: rgba(74,222,128,0.06);
+      border-color: rgba(74,222,128,0.35);
+      color: var(--green);
+    }
+    .mcq-opt.correct .opt-label { color: var(--green); }
+    .mcq-opt.wrong {
+      background: rgba(255,110,132,0.05);
+      border-color: rgba(255,110,132,0.3);
+      color: var(--error);
+    }
+    .mcq-opt.wrong .opt-label { color: var(--error); }
+
+    .mcq-icon { margin-left: auto; font-size: 0.75rem; }
+
+    .ai-explain-btn {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--secondary);
+      background: transparent;
+      border: 1px solid rgba(168,140,251,0.35);
+      padding: 7px 16px;
+      cursor: pointer;
+      border-radius: 0;
+      letter-spacing: 0.04em;
+      transition: background 0.2s, color 0.2s;
+    }
+    .ai-explain-btn:hover { background: rgba(168,140,251,0.1); }
+
+    /* ─── PDF GENERATOR ─── */
+    .pdf-pills { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .pdf-pill {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.64rem;
+      letter-spacing: 0.08em;
+      padding: 5px 12px;
+      border-radius: 0;
+      border: 1px solid;
+      font-weight: 400;
+    }
+    .pill-ws   { color: #bd9dff; border-color: rgba(189,157,255,0.3); background: rgba(189,157,255,0.06); }
+    .pill-es   { color: #ff97b2; border-color: rgba(255,151,178,0.3); background: rgba(255,151,178,0.05); }
+    .pill-ps   { color: #67e8f9; border-color: rgba(103,232,249,0.3); background: rgba(103,232,249,0.05); }
+    .pill-ct   { color: #fbbf24; border-color: rgba(251,191,36,0.3); background: rgba(251,191,36,0.05); }
+
+    /* ─── RAG ENGINE ─── */
+    .rag-subjects { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+    .subj-pill {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.74rem;
+      font-weight: 500;
+      padding: 6px 14px;
+      border: 1px solid var(--outline);
+      background: rgba(71,71,84,0.12);
+      color: var(--text);
+      border-radius: 0;
+      transition: border-color 0.2s, color 0.2s;
+    }
+    .subj-pill:hover { border-color: var(--primary); color: var(--primary); }
+
+    .rag-index-meta {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.64rem;
+      color: var(--muted);
+      line-height: 1.8;
+      letter-spacing: 0.04em;
+    }
+    .rag-index-meta span { color: var(--primary); }
+
+    /* ─── ARCHITECTURE STRIP ─── */
+    #architecture {
+      padding: 80px 60px;
+      border-top: 1px solid var(--outline);
+    }
+
+    .arch-flow {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-top: 36px;
+    }
+
+    .arch-node {
+      flex-shrink: 0;
+      background: var(--surface);
+      border: 1px solid var(--outline);
+      padding: 16px 20px;
+      min-width: 130px;
+      text-align: center;
+    }
+    .arch-node-label {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.65rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .arch-node-val {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .arch-node.highlight { border-color: rgba(189,157,255,0.4); background: rgba(189,157,255,0.04); }
+    .arch-node.highlight .arch-node-val { color: var(--primary); }
+
+    .arch-arrow {
+      flex-shrink: 0;
+      width: 36px;
+      text-align: center;
+      color: var(--outline);
+      font-family: 'Fira Code', monospace;
+      font-size: 0.9rem;
+    }
+
+    /* ─── TECH STACK ─── */
+    #stack {
+      background: var(--surface);
+      border-top: 1px solid var(--outline);
+      padding: 56px 60px;
+    }
+
+    .stack-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 28px;
+    }
+
+    .stack-tag {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      border: 1px solid var(--outline);
+      padding: 6px 14px;
+      border-radius: 0;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .stack-tag:hover { color: var(--primary); border-color: rgba(189,157,255,0.4); }
+
+    /* ─── FOOTER ─── */
+    footer {
+      border-top: 1px solid var(--outline);
+      padding: 36px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .footer-stack {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .footer-stack span { color: var(--primary); }
+
+    .footer-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .footer-link {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+    .footer-link:hover { color: var(--primary); }
+
+    .footer-badge {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.62rem;
+      color: var(--tertiary);
+      border: 1px solid rgba(255,151,178,0.3);
+      padding: 4px 12px;
+      letter-spacing: 0.08em;
+      background: rgba(255,151,178,0.04);
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 900px) {
+      nav { padding: 16px 24px; }
+      .nav-links { display: none; }
+      #hero { grid-template-columns: 1fr; padding: 90px 24px 48px; gap: 48px; }
+      .hero-left { padding-right: 0; }
+      #stats { padding: 40px 24px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 24px 0; }
+      .stat-item:nth-child(2) { border-right: none; }
+      #features { padding: 60px 24px; }
+      .features-grid { grid-template-columns: 1fr; }
+      #architecture { padding: 60px 24px; }
+      #stack { padding: 40px 24px; }
+      footer { padding: 28px 24px; flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ NAV ═══ -->
+<nav>
+  <div class="nav-logo">TUTOR<span>—</span>AI</div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#stack">Stack</a></li>
+  </ul>
+  <a href="https://github.com/piyushkumar0707/TUTOR-AI" class="nav-cta" target="_blank" rel="noopener">View on GitHub ↗</a>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section id="hero">
+  <div class="hero-bloom"></div>
+
+  <div class="hero-left">
+    <div class="hero-eyebrow">Production-grade AI tutoring</div>
+
+    <h1 class="hero-headline">
+      Your smartest<br />
+      <em>study session.</em>
+    </h1>
+
+    <p class="hero-sub">
+      <strong>RAG-powered AI tutoring.</strong> Adaptive difficulty.
+      Context-aware quizzes. PDF assignments. All in one session —
+      with real SSE streaming and a knowledge engine that never mocks its answers.
+    </p>
+
+    <div class="hero-actions">
+      <a href="https://github.com/piyushkumar0707/TUTOR-AI" class="btn-primary" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.338c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z"/></svg>
+        View on GitHub
+      </a>
+      <a href="https://tutor-ai-nu.vercel.app/" class="btn-ghost" target="_blank" rel="noopener">Live Demo ↗</a>
+    </div>
+  </div>
+
+  <div class="hero-right">
+    <div class="chat-widget" id="chatWidget">
+      <div class="chat-titlebar">
+        <span class="dot dot-r"></span>
+        <span class="dot dot-y"></span>
+        <span class="dot dot-g"></span>
+        <span class="chat-titlebar-label">tutor-ai · session:8f3c · subject:Science</span>
+      </div>
+      <div class="chat-body">
+
+        <!-- User message -->
+        <div class="chat-msg">
+          <div class="chat-avatar avatar-user">USR</div>
+          <div class="chat-bubble bubble-user">
+            Explain Newton's Second Law
+          </div>
+        </div>
+
+        <!-- RAG injection label -->
+        <div style="padding-left: 36px;">
+          <div class="rag-label">
+            <span class="rag-dot"></span>
+            RAG CONTEXT INJECTED · 3 chunks · physics.json
+          </div>
+        </div>
+
+        <!-- AI streaming response -->
+        <div class="chat-msg">
+          <div class="chat-avatar avatar-ai">AI</div>
+          <div class="chat-bubble bubble-ai" id="aiBubble">
+            <span class="typewriter animate" id="typewriterText">Newton's Second Law states that the acceleration of an object is directly proportional to the net force acting upon it, and inversely proportional to its mass — expressed as <strong style="color:var(--primary)">F = ma</strong>. This means a larger force produces greater acceleration for the same mass.</span><span class="cursor-blink"></span>
+          </div>
+        </div>
+
+        <!-- Difficulty label -->
+        <div style="padding-left: 36px; padding-bottom: 4px;">
+          <div class="rag-label" style="border-left-color: var(--tertiary); color: var(--tertiary);">
+            <span class="rag-dot" style="background: var(--tertiary);"></span>
+            REPLY QUALITY: HIGH · followUpDifficulty → HARD
+          </div>
+        </div>
+
+      </div>
+      <div class="chat-footer-sse">
+        <span class="sse-indicator"></span>
+        SSE stream · text/event-stream · Groq llama-3.3-70b-versatile · 312 tokens
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ STATS STRIP ═══ -->
+<section id="stats">
+  <div class="stats-grid">
+    <div class="stat-item">
+      <div class="stat-number" data-target="25" id="stat0">0</div>
+      <div class="stat-label">Source Documents</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target="200" id="stat1">0</div>
+      <div class="stat-label">word Chunks</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target="3" id="stat2">0</div>
+      <div class="stat-label">Context Hits / Query</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target="4" id="stat3">0</div>
+      <div class="stat-label">Assignment Types</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FEATURES ═══ -->
+<section id="features">
+  <div class="section-header">
+    <div class="section-eyebrow">Core Modules</div>
+    <h2 class="section-title">Four systems. One session.</h2>
+  </div>
+
+  <div class="features-grid">
+
+    <!-- 01 AI CHAT -->
+    <div class="feat-card" id="fc0">
+      <div class="feat-index">01 · AI CHAT</div>
+      <div class="feat-title">Adaptive AI Tutor</div>
+      <p class="feat-desc">
+        SSE streaming delivers tokens as they arrive — no fake loaders, no
+        polling. Before every Groq call, the RAG engine pulls the top-3
+        knowledge chunks from MongoDB. The backend classifies each reply
+        quality and escalates difficulty across the session.
+      </p>
+
+      <div class="difficulty-ladder">
+        <span class="diff-tag easy">EASY</span>
+        <span class="diff-arrow">→</span>
+        <span class="diff-tag medium">MEDIUM</span>
+        <span class="diff-arrow">→</span>
+        <span class="diff-tag hard">HARD ●</span>
+      </div>
+
+      <p style="font-size:0.8rem; color:var(--muted); margin-bottom:16px; line-height:1.6;">
+        The tutor genuinely gets harder as you improve. Reply classification
+        happens server-side on every exchange — not a timer, not random.
+      </p>
+
+      <div class="feat-meta">SSE · text/event-stream · RAG top-k=3 · 5 subjects</div>
+    </div>
+
+    <!-- 02 QUIZ -->
+    <div class="feat-card" id="fc1">
+      <div class="feat-index">02 · QUIZ MODULE</div>
+      <div class="feat-title">Context-Aware Quizzes</div>
+      <p class="feat-desc">
+        Launched from chat, the quiz pulls the last 6 messages as context —
+        questions are about what was just discussed. Every explanation is
+        RAG-injected.
+      </p>
+
+      <div class="quiz-label">CONTEXT-AWARE · 5 MCQ · 2E + 2M + 1H</div>
+
+      <div class="mcq-card">
+        <div class="mcq-question">Which expression correctly represents Newton's Second Law?</div>
+        <div class="mcq-options">
+          <div class="mcq-opt"><span class="opt-label">A</span>F = mv</div>
+          <div class="mcq-opt correct">
+            <span class="opt-label">B</span>F = ma
+            <span class="mcq-icon">✓</span>
+          </div>
+          <div class="mcq-opt"><span class="opt-label">C</span>F = m/a</div>
+          <div class="mcq-opt wrong">
+            <span class="opt-label">D</span>F = a/m
+            <span class="mcq-icon">✗</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="ai-explain-btn">AI Explanation ↗</button>
+    </div>
+
+    <!-- 03 PDF -->
+    <div class="feat-card" id="fc2">
+      <div class="feat-index">03 · PDF GENERATOR</div>
+      <div class="feat-title">Assignment Generator</div>
+      <p class="feat-desc">
+        Four document types structured on Bloom's taxonomy.
+        Generated by llama-3.3-70b-versatile with coordinate-based
+        layout — explicit x/y positions, zero element overlap.
+        Streamed as binary PDF via chunked transfer encoding.
+      </p>
+
+      <div class="pdf-pills">
+        <span class="pdf-pill pill-ws">WORKSHEET</span>
+        <span class="pdf-pill pill-es">ESSAY</span>
+        <span class="pdf-pill pill-ps">PROBLEM SET</span>
+        <span class="pdf-pill pill-ct">COMPREHENSION</span>
+      </div>
+
+      <div class="feat-meta">llama-3.3-70b-versatile · coordinate-based layout · binary stream · PDFKit</div>
+    </div>
+
+    <!-- 04 RAG -->
+    <div class="feat-card" id="fc3">
+      <div class="feat-index">04 · RAG ENGINE</div>
+      <div class="feat-title">Knowledge Index</div>
+      <p class="feat-desc">
+        25 source documents across 5 subjects, chunked into 200-word
+        segments. MongoDB <code style="font-family:'Fira Code',monospace; color:var(--secondary); font-size:0.8em;">$text</code> search with
+        keyword-regex fallback. Non-blocking — always returns <code style="font-family:'Fira Code',monospace; color:var(--muted); font-size:0.8em;">''</code> on
+        failure so the LLM call is never gated.
+      </p>
+
+      <div class="rag-subjects">
+        <span class="subj-pill">Mathematics</span>
+        <span class="subj-pill">Science</span>
+        <span class="subj-pill">History</span>
+        <span class="subj-pill">Coding</span>
+        <span class="subj-pill">English</span>
+      </div>
+
+      <div class="rag-index-meta">
+        <span style="color:var(--primary)">25</span> docs ·
+        <span style="color:var(--primary)">200</span>-word chunks ·
+        MongoDB <span style="color:var(--secondary)">$text</span> search +
+        <span style="color:var(--secondary)">regex</span> fallback ·
+        never blocks LLM
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ═══ ARCHITECTURE FLOW ═══ -->
+<section id="architecture">
+  <div class="section-header">
+    <div class="section-eyebrow">Request Pipeline</div>
+    <h2 class="section-title">How a single query flows.</h2>
+  </div>
+
+  <div class="arch-flow">
+    <div class="arch-node">
+      <div class="arch-node-label">Client</div>
+      <div class="arch-node-val">React 19</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-node-label">Transport</div>
+      <div class="arch-node-val">SSE stream</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node highlight">
+      <div class="arch-node-label">RAG Lookup</div>
+      <div class="arch-node-val">MongoDB · top-3</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node highlight">
+      <div class="arch-node-label">Context Inject</div>
+      <div class="arch-node-val">Prompt builder</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-node-label">Inference</div>
+      <div class="arch-node-val">Groq LLaMA</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node highlight">
+      <div class="arch-node-label">Classifier</div>
+      <div class="arch-node-val">Difficulty ++</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-node">
+      <div class="arch-node-label">Output</div>
+      <div class="arch-node-val">Token stream</div>
+    </div>
+  </div>
+
+  <p style="font-family:'Fira Code',monospace; font-size:0.66rem; color:var(--outline); margin-top:16px; letter-spacing:0.06em;">
+    RAG lookup is async and non-blocking. If it fails, the pipeline continues with '' context — the LLM call is never gated.
+  </p>
+</section>
+
+<!-- ═══ TECH STACK ═══ -->
+<section id="stack">
+  <div class="section-eyebrow">Stack</div>
+  <div class="section-title" style="font-family:'Playfair Display',serif; font-style:italic; font-size:1.6rem; margin-top:10px;">Every layer, visible.</div>
+  <div class="stack-row">
+    <span class="stack-tag">React 19</span>
+    <span class="stack-tag">Node.js</span>
+    <span class="stack-tag">Express 5</span>
+    <span class="stack-tag">MongoDB</span>
+    <span class="stack-tag">Groq SDK</span>
+    <span class="stack-tag">llama-3.3-70b-versatile</span>
+    <span class="stack-tag">SSE</span>
+    <span class="stack-tag">text/event-stream</span>
+    <span class="stack-tag">RAG</span>
+    <span class="stack-tag">$text search</span>
+    <span class="stack-tag">PDFKit</span>
+    <span class="stack-tag">Bloom's Taxonomy</span>
+    <span class="stack-tag">JWT Auth</span>
+    <span class="stack-tag">Vercel</span>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer>
+  <div class="footer-stack">
+    <span>React 19</span> · <span>Express 5</span> · <span>MongoDB</span> · <span>Groq</span> · <span>SSE</span> · <span>RAG</span> · <span>PDFKit</span>
+  </div>
+  <div class="footer-links">
+    <span class="footer-badge">SIH 2025</span>
+    <a href="https://github.com/piyushkumar0707/TUTOR-AI" class="footer-link" target="_blank" rel="noopener">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.604-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.464-1.11-1.464-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.578 9.578 0 0112 6.836a9.59 9.59 0 012.504.338c1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.741 0 .267.18.578.688.48C19.138 20.161 22 16.416 22 12c0-5.523-4.477-10-10-10z"/></svg>
+      GitHub ↗
+    </a>
+    <a href="https://tutor-ai-nu.vercel.app/" class="footer-link" target="_blank" rel="noopener">Live Demo ↗</a>
+  </div>
+</footer>
+
+<script>
+  // ── Typewriter animation (CSS handles it, JS re-triggers if needed)
+  document.addEventListener('DOMContentLoaded', () => {
+    const tw = document.getElementById('typewriterText');
+    if (tw) {
+      tw.classList.remove('animate');
+      void tw.offsetWidth;
+      tw.classList.add('animate');
+    }
+  });
+
+  // ── IntersectionObserver: fade-up feature cards
+  const featureCards = document.querySelectorAll('.feat-card');
+  const cardObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        cardObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  featureCards.forEach(card => cardObserver.observe(card));
+
+  // ── Stat counter on scroll
+  function animateCount(el, target, duration) {
+    const start = performance.now();
+    const update = (now) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.floor(eased * target);
+      if (progress < 1) requestAnimationFrame(update);
+      else el.textContent = target;
+    };
+    requestAnimationFrame(update);
+  }
+
+  let statsAnimated = false;
+  const statsSection = document.getElementById('stats');
+  const statsObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting && !statsAnimated) {
+      statsAnimated = true;
+      document.querySelectorAll('[data-target]').forEach((el, i) => {
+        const target = parseInt(el.dataset.target);
+        setTimeout(() => animateCount(el, target, 900), i * 120);
+      });
+      statsObserver.unobserve(statsSection);
+    }
+  }, { threshold: 0.3 });
+  statsObserver.observe(statsSection);
+
+  // ── Stagger arch nodes fade-in
+  const archNodes = document.querySelectorAll('.arch-node, .arch-arrow');
+  archNodes.forEach((el, i) => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(12px)';
+    el.style.transition = `opacity 0.4s ease ${i * 60}ms, transform 0.4s ease ${i * 60}ms`;
+  });
+  const archObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      archNodes.forEach(el => { el.style.opacity = '1'; el.style.transform = 'none'; });
+      archObserver.unobserve(document.getElementById('architecture'));
+    }
+  }, { threshold: 0.2 });
+  archObserver.observe(document.getElementById('architecture'));
+</script>
+</body>
+</html>

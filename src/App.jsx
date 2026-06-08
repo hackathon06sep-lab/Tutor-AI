@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import Landing       from './pages/Landing';
 import Onboarding    from './pages/Onboarding';
 import Signin        from './pages/Signin';
 import Signup        from './pages/Signup';
@@ -27,7 +28,8 @@ export default function App() {
     <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/"       element={<Onboarding />} />
+          <Route path="/"           element={<Landing />} />
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/signin" element={<PublicRoute><Signin /></PublicRoute>} />
           <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
           <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
