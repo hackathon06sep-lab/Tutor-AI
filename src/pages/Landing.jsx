@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
 
 /* ────────────────────────────────────────────────────────────
    Utility: count-up hook
@@ -486,7 +485,7 @@ export default function Landing() {
               View on GitHub
             </a>
             <a
-              href="https://tutor-ai-nu.vercel.app/"
+              href="https://tutor-ai-nu.vercel.app/signup"
               target="_blank" rel="noopener noreferrer"
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 8,
@@ -501,21 +500,7 @@ export default function Landing() {
             >
               Live Demo ↗
             </a>
-            <Link
-              to="/onboarding"
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: 8,
-                fontFamily: 'Plus Jakarta Sans, sans-serif', fontSize: '0.88rem',
-                fontWeight: 600, letterSpacing: '0.04em',
-                color: '#bd9dff', background: 'transparent',
-                border: '1px solid rgba(189,157,255,0.35)', padding: '13px 28px', textDecoration: 'none',
-                transition: 'background 0.2s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(189,157,255,0.07)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
-            >
-              Try the App →
-            </Link>
+
           </div>
         </div>
 
