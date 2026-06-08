@@ -112,13 +112,15 @@ router.post('/register', async (req, res) => {
 
 router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body;
+  // Normalize email the same way register does so queries always match stored values.
+  const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
 
-  if (!email || !password) {
+  if (!normalizedEmail || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
     const match = await bcrypt.compare(password, user.password);
@@ -150,9 +152,17 @@ router.post('/forgot-password', async (req, res) => {
     if (!user) return res.status(200).json({ message: genericMessage });
 
     const { rawToken, hashedToken } = buildResetToken();
-    user.passwordResetToken = hashedToken;
-    user.passwordResetExpires = new Date(Date.now() + RESET_TOKEN_TTL_MS);
-    await user.save();
+    // Use updateOne instead of user.save() to avoid triggering full Mongoose document
+    // validation. save() re-validates ALL required fields (including `name`), which
+    // crashes for legacy/corrupted documents that are missing fields unrelated to
+    // password reset. updateOne only touches the two fields we care about.
+    await User.updateOne(
+      { _id: user._id },
+      {
+        passwordResetToken: hashedToken,
+        passwordResetExpires: new Date(Date.now() + RESET_TOKEN_TTL_MS),
+      }
+    );
 
     const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173')
       .split(/[\s,]+/)
